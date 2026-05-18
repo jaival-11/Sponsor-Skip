@@ -1,0 +1,11 @@
+# Android/Gradle caches and build folders
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+
+# EXTREMELY IMPORTANT: Do not upload the signing key or APKs!
+*.keystore
+*.jks
+*.apk

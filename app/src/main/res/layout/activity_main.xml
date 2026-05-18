@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <FrameLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <include layout="@layout/layout_home" android:id="@+id/view_home" />
+        <include layout="@layout/layout_settings" android:id="@+id/view_settings" android:visibility="gone" />
+    </FrameLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="8dp"
+        app:strokeWidth="0dp"
+        app:cardBackgroundColor="?attr/colorSurfaceContainerHigh">
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_nav"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            app:itemPaddingTop="12dp"
+            app:itemPaddingBottom="12dp"
+            app:labelVisibilityMode="labeled"
+            app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator"
+            app:menu="@menu/nav_menu" />
+    </com.google.android.material.card.MaterialCardView>
+
+</RelativeLayout>

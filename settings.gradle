@@ -1,0 +1,2 @@
+rootProject.name = "SponsorSkipper"
+include ':app'

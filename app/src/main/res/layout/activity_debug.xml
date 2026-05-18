@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
+
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="wrap_content" app:title="Debug Logs" app:navigationIcon="?attr/homeAsUpIndicator"/>
+    
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+            <Button android:id="@+id/btnRefresh" style="@style/Widget.Material3.Button.TonalButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Refresh" android:layout_marginEnd="4dp"/>
+            <Button android:id="@+id/btnCopy" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Copy" android:layout_marginStart="2dp" android:layout_marginEnd="2dp"/>
+            <Button android:id="@+id/btnClear" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:textColor="?attr/colorError" android:text="Clear" android:layout_marginStart="4dp"/>
+        </LinearLayout>
+        <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginTop="16dp" android:background="?attr/colorSurfaceVariant" android:padding="8dp">
+            <TextView android:id="@+id/tvLogs" android:layout_width="match_parent" android:layout_height="wrap_content" android:fontFamily="monospace" android:textSize="10sp" android:textIsSelectable="true"/>
+        </ScrollView>
+    </LinearLayout>
+</LinearLayout>
