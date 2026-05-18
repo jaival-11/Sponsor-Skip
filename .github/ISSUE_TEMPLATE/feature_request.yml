@@ -1,0 +1,61 @@
+name: "🆕️ Feature Request"
+description: "Give feature suggestions to help us improve the app."
+title: "[Feat]: "
+labels: ["feat"]
+body:
+  - type: textarea
+    id: short-description
+    attributes:
+      label: Short Description
+      description: Provide a brief, one-sentence summary of the feature.
+      placeholder: e.g., Cool feature to do this.
+    validations:
+      required: true
+
+  - type: textarea
+    id: detailed-description
+    attributes:
+      label: Explain feature in detail
+      description: Describe what the feature is, what it does, and any other relevant context.
+    validations:
+      required: true
+
+  - type: textarea
+    id: intended-behaviour
+    attributes:
+      label: Intended Behaviour
+      description: How your feature will work
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What should be the motivation to implement this issue, how it will help
+    validations:
+      required: true
+
+  - type: textarea
+    id: Concept
+    attributes:
+      label: Concept (optional)
+      description: Drag and drop or paste your concept images here to help explain your feature.
+
+  - type: textarea
+    id: additional-comments
+    attributes:
+      label: Additional comments
+      description: Any other information you want to share?
+
+  - type: checkboxes
+    id: disclaimer
+    attributes:
+      label: Terms & Disclaimers
+      description: Please read and agree to the terms below before submitting your feature request.
+      options:
+        - label: I understand that submitting this request does not guarantee it will be accepted, or implemented. Furthermore, I agree that if this feature is implemented, the project maintainer is under no obligation to provide financial compensation, royalties, or formal attribution/credits to me.
+          required: true
+    validations:
+      required: true
+

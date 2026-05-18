@@ -1,0 +1,110 @@
+name: "🐛 Bug Report"
+description: "Report a bug to help us improve the app."
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: short-description
+    attributes:
+      label: Short Description
+      description: Provide a brief, one-sentence summary of the issue.
+      placeholder: e.g., App crashes when clicking the play button.
+    validations:
+      required: true
+
+  - type: textarea
+    id: detailed-description
+    attributes:
+      label: Explain bug in detail
+      description: Describe what the bug is, when it happens, and any other relevant context.
+    validations:
+      required: true
+
+  - type: textarea
+    id: intended-behaviour
+    attributes:
+      label: Intended Behaviour
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Please provide clear, step-by-step instructions to reproduce the bug.
+      value: |
+        1. 
+        2. 
+        3. 
+        4. 
+    validations:
+      required: true
+
+  - type: input
+    id: android-version
+    attributes:
+      label: Android version
+      placeholder: e.g., Android 14
+    validations:
+      required: true
+
+  - type: input
+    id: youtube-version
+    attributes:
+      label: YouTube version
+      placeholder: e.g., 19.05.34
+    validations:
+      required: true
+
+  - type: input
+    id: phone-model
+    attributes:
+      label: Phone model
+      placeholder: e.g., Samsung Galaxy S23
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      placeholder: e.g., v2.1.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: debug-logs
+    attributes:
+      label: Debug logs
+      description: Go to settings > Debug Logs > Enable logging. Make sure to clear log, then reproduce the error and copy-paste logs here.
+      render: text
+      placeholder: Paste your logs here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: Drag and drop or paste your screenshots here to help explain the problem.
+
+  - type: textarea
+    id: additional-comments
+    attributes:
+      label: Additional comments
+      description: Any other information you want to share? (Workarounds, related issues, etc.)
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Before submitting an issue
+      description: Please confirm that you have completed the following mandatory steps.
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate.
+          required: true
+        - label: I am using the latest version of the application.
+          required: true
+    validations:
+      required: true
+

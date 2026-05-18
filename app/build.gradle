@@ -1,3 +1,21 @@
+/*
+ * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
+ * Copyright (C) 2026 Jaival
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
@@ -12,7 +30,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 1
-        versionName "1.0.1"
+        versionName "1.0.7"
     }
     buildFeatures {
         viewBinding true
@@ -34,3 +52,5 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.json:json:20231013'
 }
+apply plugin: 'com.mikepenz.aboutlibraries.plugin'
+dependencies { implementation 'com.mikepenz:aboutlibraries:10.9.2' }

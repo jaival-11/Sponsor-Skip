@@ -1,3 +1,20 @@
+/*
+ * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
+ * Copyright (C) 2026 Jaival
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package me.jaival.sponsorskip
 
 import android.content.BroadcastReceiver
@@ -38,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     private val statsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) { refreshStats() }
     }
+    
+    private var privacyDialog: androidx.appcompat.app.AlertDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,12 +64,17 @@ class MainActivity : AppCompatActivity() {
         AppLogger.init(this)
         AppLogger.log("[UI] MainActivity onCreate triggered.")
         setContentView(R.layout.activity_main)
+        
+        // ENFORCE PRIVACY GATEKEEPER
+        if (!SettingsManager.isPrivacyAccepted) {
+            showPrivacyDialog()
+        }
 
         fun View.haptic() = this.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 
         val viewHome = findViewById<View>(R.id.view_home)
         val viewSettings = findViewById<View>(R.id.view_settings)
-        
+
         findViewById<BottomNavigationView>(R.id.bottom_nav).setOnItemSelectedListener { item ->
             item.actionView?.haptic()
             AppLogger.log("[UI] Navigated to ${item.title}")
@@ -64,10 +88,9 @@ class MainActivity : AppCompatActivity() {
         populateSegments()
         refreshStats()
         setupFooter()
-
-        val switchMaster = findViewById<MaterialSwitch>(R.id.switchMaster)
         
-        // Ensure switch accurately reflects state on load before attaching listener
+        val switchMaster = findViewById<MaterialSwitch>(R.id.switchMaster)
+
         val hasNotifInit = NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)
         if (!hasNotifInit && SettingsManager.isServiceEnabled) {
             SettingsManager.isServiceEnabled = false
@@ -77,18 +100,16 @@ class MainActivity : AppCompatActivity() {
 
         switchMaster.setOnCheckedChangeListener { view, isChecked ->
             val hasNotif = NotificationManagerCompat.getEnabledListenerPackages(this@MainActivity).contains(packageName)
-            
-            // PERMISSION GUARD
+
             if (isChecked && !hasNotif) {
                 view.haptic()
                 AppLogger.log("[GUARD] Blocked master toggle: Missing Notification Listener permission.")
-                switchMaster.isChecked = false // Auto-revert
+                switchMaster.isChecked = false 
                 Toast.makeText(this@MainActivity, "Permission required to start service.", Toast.LENGTH_LONG).show()
                 startActivity(Intent(this@MainActivity, PermissionsActivity::class.java))
                 return@setOnCheckedChangeListener
             }
 
-            // ONLY run if the state actually changed (prevents infinite loop from auto-revert)
             if (SettingsManager.isServiceEnabled != isChecked) {
                 view.haptic()
                 SettingsManager.isServiceEnabled = isChecked
@@ -103,7 +124,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.btnSetBackup).setOnClickListener { it.haptic(); Toast.makeText(this, "Backup coming soon!", Toast.LENGTH_SHORT).show() }
         findViewById<View>(R.id.btnSetDebug).setOnClickListener { it.haptic(); AppLogger.log("[UI] Opened Debug Logs"); startActivity(Intent(this, DebugActivity::class.java)) }
         findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); AppLogger.log("[UI] Opened Codeberg Repo"); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip"))) }
-        findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); AppLogger.log("[UI] Opened Codeberg Issues"); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/issues"))) }
+        findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); AppLogger.log("[UI] Opened Bug Reports"); Toast.makeText(this, "You can also contact the developer directly, but Codeberg is preferred", Toast.LENGTH_LONG).show(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
+        findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); AppLogger.log("[UI] Opened Feature Requests"); Toast.makeText(this, "You can also contact the developer directly, but Codeberg is preferred", Toast.LENGTH_LONG).show(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
+        findViewById<View>(R.id.btnSetContact).setOnClickListener { it.haptic(); AppLogger.log("[UI] Opened Email Client"); val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:jaival7909@gmail.com?subject=" + Uri.encode("Sponsor Skip - App Contact")) }; startActivity(Intent.createChooser(intent, "Send Email")) }
+        findViewById<View>(R.id.btnSetPrivacy).setOnClickListener { it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md"))) }
+        findViewById<View>(R.id.btnSetLicense).setOnClickListener { it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY); androidx.appcompat.app.AlertDialog.Builder(this).setTitle("License & Warranty").setMessage("Sponsor Skip: Auto-skips SponsorBlock segments in YouTube videos\nCopyright (C) 2026 Jaival\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.").setPositiveButton("View Full GPLv3") { _, _ -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gnu.org/licenses/gpl-3.0.html"))) }.setNegativeButton("Close", null).show() }
+        findViewById<View>(R.id.btnSetCredits).setOnClickListener { it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY); com.mikepenz.aboutlibraries.LibsBuilder().withLicenseShown(true).start(this) }
 
         AppLogger.log("[SYSTEM] Launching background auto-update check...")
         lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) }
@@ -113,6 +139,35 @@ class MainActivity : AppCompatActivity() {
         } else {
             registerReceiver(statsReceiver, IntentFilter("me.jaival.sponsorskip.STATS_UPDATED"))
         }
+    }
+
+    private fun showPrivacyDialog() {
+        if (privacyDialog?.isShowing == true) return
+
+        val message = "To keep things transparent and respect your privacy, here is exactly how the app works under the hood:\n\n" +
+            "1. Finding the Video: We require 'Notification Access' to securely read your device's active media player. This lets us see the Title of the video you are watching. We DO NOT read your personal messages or other notifications.\n\n" +
+            "2. Getting the Video ID: Because the media player doesn't provide a direct link, the app anonymously searches the public YouTube website using the Title to grab the official 'Video ID'. While your IP address connects to YouTube during this search, no account data, logins, or cookies are sent.\n\n" +
+            "3. Skipping the Ads: We send that Video ID to the community-run SponsorBlock API (sponsor.ajay.app) to get the skip timestamps. This request is processed under their privacy policy. Your IP connects to their servers anonymously and is never tied to your personal identity.\n\n" +
+            "4. Local processing: The actual skipping happens entirely on your phone. We never collect, store, share, or sell your viewing history.\n\n" +
+            "By tapping 'Accept', you consent to this data flow and our Privacy Policy."
+
+        privacyDialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Welcome to Sponsor Skip!")
+            .setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true }
+            .setNegativeButton("Decline") { _, _ -> finishAffinity() }
+            .setNeutralButton("Privacy Policy", null)
+            .create()
+
+        // Override Neutral button to prevent the dialog from closing when reading the policy
+        privacyDialog?.setOnShowListener {
+            privacyDialog?.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { view ->
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md")))
+            }
+        }
+        privacyDialog?.show()
     }
 
     override fun onResume() {
@@ -142,13 +197,22 @@ class MainActivity : AppCompatActivity() {
             val title = TextView(this).apply { text = label; textSize = 16f; setTypeface(null, Typeface.BOLD); setPadding(0, 0, 0, 16) }
             val radioGroup = RadioGroup(this).apply {
                 orientation = RadioGroup.HORIZONTAL
-                addView(RadioButton(context).apply { id = 0; text = "Off" })
-                addView(RadioButton(context).apply { id = 1; text = "Skip automatically" })
-                check(SettingsManager.getSegmentAction(key))
+                
+                val offId = View.generateViewId()
+                val skipId = View.generateViewId()
+                
+                addView(RadioButton(context).apply { id = offId; text = "Off" })
+                addView(RadioButton(context).apply { id = skipId; text = "Skip automatically" })
+                
+                check(if (SettingsManager.getSegmentAction(key) == 1) skipId else offId)
+                
                 setOnCheckedChangeListener { view, checkedId ->
-                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-                    AppLogger.log("[SETTINGS] Category '$key' changed to state: $checkedId")
-                    SettingsManager.setSegmentAction(key, checkedId)
+                    if (checkedId != -1) { 
+                        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                        val action = if (checkedId == skipId) 1 else 0
+                        AppLogger.log("[SETTINGS] Category '$key' changed to state: $action")
+                        SettingsManager.setSegmentAction(key, action)
+                    }
                 }
             }
             layout.addView(title)
@@ -168,8 +232,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupFooter() {
+        val tvTagline = findViewById<TextView>(R.id.tvTagline)
+        val taglineText = "SponsorBlock for Vanilla YouTube"
+        val spannableTagline = SpannableString(taglineText)
+        val clickableSponsorBlock = object : ClickableSpan() {
+            override fun onClick(widget: View) {
+                widget.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/ajayyy/SponsorBlock")))
+            }
+        }
+        spannableTagline.setSpan(clickableSponsorBlock, 0, 12, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        tvTagline.text = spannableTagline
+        tvTagline.movementMethod = LinkMovementMethod.getInstance()
+        
         val footer = findViewById<TextView>(R.id.tvFooter)
-        val text = "Made by Jaival, with ❤️"
+        val text = "Made with ❤️ by Jaival"
         val spannable = SpannableString(text)
         val clickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View) {
@@ -186,6 +263,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         AppLogger.log("[UI] MainActivity destroyed.")
         unregisterReceiver(statsReceiver)
+        privacyDialog?.dismiss()
         super.onDestroy()
     }
 }
