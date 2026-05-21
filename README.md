@@ -12,9 +12,11 @@
 
 <br/>
 
-[![Follow on X](https://img.shields.io/badge/X-%40techironic11-1da1f2?style=for-the-badge&labelColor=0d1117&logo=x)](https://x.com/techironic11)[![Telegram Channel](https://img.shields.io/badge/Telegram-Join-0088cc?style=for-the-badge&labelColor=0d1117&logo=telegram)](https://t.me/techironic)[![Email Support](https://img.shields.io/badge/Email-Contact_Me-db4437?style=for-the-badge&labelColor=0d1117&logo=gmail)](mailto:jaival7909@gmail.com)
+[![Follow on X](https://img.shields.io/badge/techironic11-1da1f2?style=for-the-badge&labelColor=0d1117&logo=x)](https://x.com/techironic11)[![Telegram Channel](https://img.shields.io/badge/Telegram-Join-0088cc?style=for-the-badge&labelColor=0d1117&logo=telegram)](https://t.me/techironic)[![Email Support](https://img.shields.io/badge/Email-Contact_Me-db4437?style=for-the-badge&labelColor=0d1117&logo=gmail)](mailto:jaival7909@gmail.com)
 
 <br/>
+
+[**Download**](#where-to-get-it) · [**Features**](#features) · [**Support**](#bug-reports-feature-suggestions)
 
 ---
 
@@ -24,7 +26,7 @@
 | :--- | :--- |
 | [✨ Features](#features) | What the app can do |
 | [🛠️ How It Works](#how-it-works) | The technical workflow |
-| [📥 Where to Get It](#where-to-get-it) | Download links for the latest stable APK |
+| [📥 Where to Get It (Download)](#where-to-get-it) | Download links for the latest stable APK |
 | [💻 Build from Source](#build-from-source) | Prerequisites and compilation instructions |
 | [🤝 Contributions](#contributions) | Guidelines for contributing to the repository |
 | [🐛 Bug Reports & 💡 Feature Suggestions](#bug-reports-feature-suggestions) | How to report issues or request new features |
@@ -82,10 +84,25 @@ For more technical details refer [Under the Hood](#under-the-hood-for-developers
 
 ## 📥 Where to Get It
 
-You can download the latest compiled APK directly from the Codeberg releases page:
+You can download the latest compiled APK directly from the following sources:
 
-[![Latest Release](https://img.shields.io/gitea/v/release/jaival/Sponsor-Skip?gitea_url=https%3A%2F%2Fcodeberg.org&style=for-the-badge&color=2185D0&logo=codeberg)](https://codeberg.org/jaival/Sponsor-Skip/releases/latest)
-
+<table>
+  <tr>
+    <th align="center">Codeberg</th>
+    <th align="center">Obtainium </th>  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://codeberg.org/jaival/Sponsor-Skip/releases/latest">
+        <img src="https://codeberg.org/attachments/273c5a95-5e92-44cd-8735-c79506210e50" alt="Download from Codeberg Releases" height="50">
+    </td>    
+    <td align="center">
+      <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://codeberg.org/jaival/Sponsor-Skip">
+        <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/refs/heads/main/assets/graphics/badge_obtainium.png" alt="Download from Obtainium" height="50">
+      </a>
+    </td>
+  </tr>
+</table>
+        
 ## 💻 Build from Source
 
 If you prefer to compile the app yourself, you can easily build it from the source code using the included Gradle wrapper. 
@@ -121,11 +138,15 @@ Encountered a bug or have a brilliant idea to make Sponsor Skip even better? I t
 
 * **Found a bug?**   
 
-Open a [Bug Report](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2fbug_report.yml) using the provided issue template. Please include necessary and correct details so it can be squashed quickly!  
+Open a [Bug Report](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2fbug_report.yml) using the provided template. Please include necessary and correct details so it can be squashed quickly!  
 
 * **Have an idea?**   
 
-Open a [Feature Request](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2ffeature_request.yml) and describe how it would improve the app. 
+Open a [Feature Request](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2ffeature_request.yml) using the provided template and describe how it would improve the app. 
+
+### ❓️Got any questions?
+
+Feel free to open an [Issue](https://codeberg.org/jaival/Sponsor-Skip/issues/new/choose)
 
 *You can also contact me directly via details given at the top, though [Codeberg Issues](https://codeberg.org/jaival/SponsorSkip/issues) is preferred.*
 
@@ -133,7 +154,6 @@ Open a [Feature Request](https://codeberg.org/jaival/Sponsor-Skip/issues/new?tem
 
 Here is a quick roadmap of what is currently planned (no promises) for future updates:  
 
-* **F-Droid & IzzyOnDroid Integration:** Getting the app officially published on major open-source stores.
 * **Multi-app support:** Add support for apps other than stock YouTube app, like native android browsers.
 * **Quick Settings Tile and app shortcut:** Quickly disable or enable service via a quick settings tiles or an app shortcut.
 * **Custom SponsorBlock API:** Option to use SponsorBlock API other than default ones.
@@ -193,7 +213,7 @@ This project stands on the shoulders of giants. A massive thank you to the devel
 ---
 
 ## Privacy Policy
-Read complete Privacy Policy at [Privacy Policy](PRIVACY.md)
+Read complete Privacy Policy (human-readable) at [Privacy Policy](PRIVACY.md). 
 
 ---
 
