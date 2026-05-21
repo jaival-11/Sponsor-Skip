@@ -146,9 +146,10 @@ class MainActivity : AppCompatActivity() {
 
         val message = "To keep things transparent and respect your privacy, here is exactly how the app works under the hood:\n\n" +
             "1. Finding the Video: We require 'Notification Access' to securely read your device's active media player. This lets us see the Title of the video you are watching. We DO NOT read your personal messages or other notifications.\n\n" +
-            "2. Getting the Video ID: Because the media player doesn't provide a direct link, the app anonymously searches the public YouTube website using the Title to grab the official 'Video ID'. While your IP address connects to YouTube during this search, no account data, logins, or cookies are sent.\n\n" +
-            "3. Skipping the Ads: We send that Video ID to the community-run SponsorBlock API (sponsor.ajay.app) to get the skip timestamps. This request is processed under their privacy policy. Your IP connects to their servers anonymously and is never tied to your personal identity.\n\n" +
+            "2. Getting the Video ID: Because the media player doesn't provide a direct link, the app searches the public YouTube website using the Title to grab the official 'Video ID'. Your IP address may be exposed to YouTube during this search. However, no account data, logins, or cookies are sent.\n\n" +
+            "3. Skipping the segments: We send that Video ID to the community-run SponsorBlock API (sponsor.ajay.app) to get the skip timestamps. This request is processed under their privacy policy. Your IP address may be exposed to SponsorBlock servers.\n\n" +
             "4. Local processing: The actual skipping happens entirely on your phone. We never collect, store, share, or sell your viewing history.\n\n" +
+            "You can know more from our Privacy Policy\n\n" +
             "By tapping 'Accept', you consent to this data flow and our Privacy Policy."
 
         privacyDialog = androidx.appcompat.app.AlertDialog.Builder(this)
