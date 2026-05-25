@@ -25,11 +25,12 @@ import java.io.File
 import java.io.FileOutputStream
 
 object UpdateManager {
-    const val CURRENT_VERSION = "1.0.9"
     private val client = OkHttpClient()
 
     suspend fun checkUpdate(context: Context, manual: Boolean) {
         try {
+            val currentVersion = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
+            
             val req = Request.Builder().url("https://codeberg.org/api/v1/repos/jaival/Sponsor-Skip/releases/latest").build()
             val res = withContext(Dispatchers.IO) { client.newCall(req).execute() }
 
@@ -41,11 +42,11 @@ object UpdateManager {
             val json = JSONObject(res.body?.string() ?: "")
             val tag = json.optString("tag_name", "").replace("v", "")
 
-            if (tag.isNotBlank() && tag != CURRENT_VERSION) {
+            if (tag.isNotBlank() && tag != currentVersion) {
                 val apkUrl = json.optJSONArray("assets")?.optJSONObject(0)?.optString("browser_download_url")
                 if (apkUrl != null) {
                     withContext(Dispatchers.Main) {
-                        showUpdateDialog(context, tag, apkUrl)
+                        showUpdateDialog(context, tag, apkUrl, currentVersion)
                     }
                 }
             } else {
@@ -56,10 +57,10 @@ object UpdateManager {
         }
     }
 
-    private fun showUpdateDialog(context: Context, tag: String, apkUrl: String) {
+    private fun showUpdateDialog(context: Context, tag: String, apkUrl: String, currentVersion: String) {
         val dialog = AlertDialog.Builder(context)
             .setTitle("New version available")
-            .setMessage("Current app version is $CURRENT_VERSION. An update to v$tag is available. Open changelog to see changes")
+            .setMessage("Current app version is v$currentVersion. An update to v$tag is available. Open changelog to see changes")
             .setCancelable(false)
             .setPositiveButton("Download") { _, _ ->
                 Toast.makeText(context, "Downloading v$tag, check notification for progress", Toast.LENGTH_LONG).show()
@@ -118,7 +119,6 @@ object UpdateManager {
                     if (totalBytes > 0) {
                         val progress = (bytesCopied * 100 / totalBytes).toInt()
                         val currentTime = System.currentTimeMillis()
-                        // Update UI a maximum of twice per second to prevent notification spam lag
                         if (currentTime - lastUpdateTime > 500) {
                             builder.setProgress(100, progress, false)
                             notificationManager.notify(notifId, builder.build())
@@ -132,7 +132,6 @@ object UpdateManager {
                 inputStream.close()
             }
 
-            // Remove progress notification once download finishes
             notificationManager.cancel(notifId)
 
             withContext(Dispatchers.Main) {

@@ -118,17 +118,20 @@ class MediaNotificationService : NotificationListenerService() {
 
     private fun handleSessions(sessions: List<MediaController>?) {
         if (!SettingsManager.isServiceEnabled) return
-        val newYtController = sessions?.find { it.packageName == "com.google.android.youtube" }
+        
+        // --- THE FIX IS HERE ---
+        val newYtController = sessions?.find { SettingsManager.targetPackages.contains(it.packageName) }
+        
         if (newYtController != null) {
             if (ytController?.sessionToken == newYtController.sessionToken) return
-            AppLogger.log("[SERVICE] Hooked into YouTube MediaController (Token: ${newYtController.sessionToken}).")
+            AppLogger.log("[SERVICE] Hooked into MediaController (Token: ${newYtController.sessionToken}, Package: ${newYtController.packageName}).")
             ytController?.unregisterCallback(callback)
             ytController = newYtController
             ytController?.registerCallback(callback)
             callback.onMetadataChanged(ytController?.metadata)
         } else {
             if (ytController != null) {
-                AppLogger.log("[SERVICE] YouTube playback closed or paused heavily. Detaching.")
+                AppLogger.log("[SERVICE] Target playback closed or paused heavily. Detaching.")
                 ytController?.unregisterCallback(callback)
                 ytController = null
                 currentTitle = ""
@@ -242,7 +245,7 @@ class MediaNotificationService : NotificationListenerService() {
                             val savedMs = hitSegment.endMs - hitSegment.startMs
                             SettingsManager.skippedCount += 1
                             SettingsManager.timeSavedMs += savedMs
-                            sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED"))
+                            sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
                             
                             showToast("Skipped: ${hitSegment.category.uppercase()}")
                             skipSegments.remove(hitSegment)

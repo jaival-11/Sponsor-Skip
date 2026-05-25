@@ -22,6 +22,10 @@ import android.content.SharedPreferences
 import android.os.Build
 
 object SettingsManager {
+    var targetPackages: Set<String>
+        get() = prefs.getStringSet("targetPackages", setOf("com.google.android.youtube")) ?: setOf("com.google.android.youtube")
+        set(value) = prefs.edit().putStringSet("targetPackages", value).apply()
+
     private const val PREFS_NAME = "skipper_prefs"
     private lateinit var prefs: SharedPreferences
 

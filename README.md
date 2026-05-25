@@ -30,11 +30,10 @@
 | [Build from Source](#build-from-source) | Prerequisites and compilation instructions |
 | [Contributions](#contributions) | Guidelines for contributing to the repository |
 | [Bug Reports & Feature Suggestions](#bug-reports-feature-suggestions) | How to report issues or request new features |
-| [Roadmap](#roadmap) | Upcoming features and future release plans |
 | [Under the Hood](#under-the-hood-for-developers) | Tech stack, core architecture, and third-party libraries |
 | [Attributions & Credits](#attributions-credits) | Acknowledgments of third-party tools and creators |
 | [Privacy Policy](#privacy-policy) | Link to the complete Privacy Policy |
-| [Disclaimer](#disclaimer) | Terms of service, liability, and AI disclosures |
+| [Disclaimer](#disclaimer) | Terms of service, liability, and disclosures |
 | [License](#license) | GNU General Public License v3.0 details |
 
 </div>
@@ -44,7 +43,7 @@
 <h2><a id="screenshots"></a>Screenshots</h2>
 
 <img src="https://codeberg.org/attachments/1e85613c-e723-4a5e-8d2a-b5648044dae9" alt="Home screen" width="30%" />
-<img src="https://codeberg.org/attachments/6459b1f4-5947-46e5-bda7-b638b1145c42" alt="Settings Screen" width="30%" />
+<img src="https://codeberg.org/attachments/38f342f0-a084-4380-80b8-5120918d59a2" alt="Settings Screen" width="30%" />
 <img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
 
 ---
@@ -52,6 +51,7 @@
 ## Features
 
 * **Stock YouTube Support:** Works directly with the official, unmodded YouTube app. No root access, patching, or third-party clients required.
+* **Multi-app support:** Other than official youtube app, you can select other apps to implement Sponsor Skip for those apps too.
 * **Granular Segment Control:** Fully customize your viewing experience. Choose to automatically skip or ignore any of the standard SponsorBlock categories:
   * Sponsors
   * Intermissions & Intros
@@ -61,11 +61,9 @@
   * Non-Music Sections
   * Previews & Recaps
   * Filler Tangents
-* **Time Saved Tracking:** Keep a count of exactly how many segments you have skipped and the total time you have saved.
+* **Time Saved Tracking:** Keep a count of exactly how many segments you have skipped and the total time you have saved. You can reset the count by tapping on it.
 * **Modern & Lightweight UI:** Built with a clean, heavily-rounded Material Design aesthetic with monet themeing. 
 * **Privacy Respecting:** It runs locally on your device and does not communicate with unnecessary third parties. No data is collected by developer. For more info refer to [Privacy Policy](PRIVACY.md)
-
-See [Roadmap](#roadmap) for upcoming features!
 
 ---
 
@@ -73,7 +71,7 @@ See [Roadmap](#roadmap) for upcoming features!
 
 **Sponsor Skip** uses a clever workaround relying on Android's native media APIs.
 
-1. **Detection:** Using the `Notification Listener Service`, the app silently monitors your system's active media sessions. When it detects that the official YouTube app is playing a video, it securely reads the media metadata to identify the video.
+1. **Detection:** Using the `Notification Listener Service`, the app silently monitors your system's active media sessions. When it detects that the official YouTube app or other apps selected by user is playing a video, it securely reads the media metadata to identify the video.
 2. **Video ID:** Since `Notification Listener Service` does not provide video id, the app makes a request to `youtube.com` to get the video id.
 3. **Fetching Data:** The app takes that video ID and pings the crowd-sourced [SponsorBlock API](https://sponsor.ajay.app/) to download the exact timestamps of any known segments.
 4. **Execution:** As you watch the video, Sponsor Skip tracks the playback progress. The exact millisecond the video enters a blocked segment, the app seamlessly skips the segment.
@@ -154,17 +152,6 @@ Feel free to open an [Issue](https://codeberg.org/jaival/Sponsor-Skip/issues/new
 
 ---
 
-## Roadmap
-
-Here is a quick roadmap of what is currently planned (no promises) for future updates:  
-
-* **Multi-app support:** Add support for apps other than stock YouTube app, like native android browsers.
-* **Quick Settings Tile and app shortcut:** Quickly disable or enable service via a quick settings tiles or an app shortcut.
-* **Custom SponsorBlock API:** Option to use SponsorBlock API other than default ones.
-* **Backup & Restore:** Export and import your segment configurations and time-saved stats so you never lose your data when switching phones.
-
----
-
 ## Under the hood (for Developers)
 
 ### Tech Stack
@@ -180,7 +167,7 @@ Here is a quick roadmap of what is currently planned (no promises) for future up
 
 Sponsor Skip is built entirely in **Kotlin** and leverages modern Android development practices to interact seamlessly with external applications without requiring root or modifications.
 
-* **Media Session Interception:** The app utilizes the `NotificationListenerService` API. Instead of looking at notification text, it binds to the active media session created by the official YouTube app. This allows Sponsor Skip to securely read the Video Title from the media metadata and track the current playback position in milliseconds.
+* **Media Session Interception:** The app utilizes the `NotificationListenerService` API. Instead of looking at notification text, it binds to the active media session created by the official YouTube app or other apps selected by the user. This allows Sponsor Skip to securely read the Video Title from the media metadata and track the current playback position in milliseconds.
 * **Title-to-ID Resolution (HTML Scraping):** Because Android's media session does not expose the raw video URL, the app must resolve the Title into an ID manually. It does this by executing a silent, unauthenticated background search:
   1. The app URL-encodes the title and fires a native `OkHttp` GET request to `https://www.youtube.com/results?search_query=[TITLE]`.
   2. To prevent YouTube from blocking the request, the app spoofs a standard desktop Chrome `User-Agent`.
@@ -213,7 +200,8 @@ This project stands on the shoulders of giants. A massive thank you to the devel
 ### 4. Networking & Infrastructure
 * **[OkHttp](https://square.github.io/okhttp/) & [Gson](https://github.com/google/gson):** (By Square and Google). Essential libraries utilized for handling the asynchronous network requests and JSON parsing required to communicate with the SponsorBlock API.
 
-### 5. [Sameera](https://github.com/sameerasw): Thank you for helping out with app documentation and guidance related to publishing 🙏❤️.
+### 5. [Sameera](https://github.com/sameerasw)
+* Thank you for helping out with app documentation and guidance related to publishing 🙏❤️.
 
 
 ---
