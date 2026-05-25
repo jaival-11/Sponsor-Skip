@@ -22,7 +22,7 @@
 
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sponsor Skip" android:textSize="18sp" android:textStyle="bold"/>
-                    <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Version 1.0.7 (Tap to check)" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant"/>
+                    <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Version 1.0.9 (Tap to check)" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant"/>
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

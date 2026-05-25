@@ -29,8 +29,8 @@ android {
         applicationId "me.jaival.sponsorskip"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0.7"
+        versionCode 4
+        versionName "1.0.9"
     }
     buildFeatures {
         viewBinding true

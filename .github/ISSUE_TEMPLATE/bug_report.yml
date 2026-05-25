@@ -1,4 +1,4 @@
-name: "🐛 Bug Report"
+name: "Bug Report"
 description: "Report a bug to help us improve the app."
 title: "[Bug]: "
 labels: ["bug"]
@@ -80,8 +80,6 @@ body:
       description: Go to settings > Debug Logs > Enable logging. Make sure to clear log, then reproduce the error and copy-paste logs here.
       render: text
       placeholder: Paste your logs here...
-    validations:
-      required: true
 
   - type: textarea
     id: screenshots

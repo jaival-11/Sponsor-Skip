@@ -65,10 +65,21 @@ class DebugActivity : AppCompatActivity() {
         btnRefresh.setOnClickListener { refreshLogs(tvLogs) }
         
         btnCopy.setOnClickListener {
+            val rawLogs = tvLogs.text.toString()
+            
+            // Regex to redact titles and IDs before copying to clipboard
+            val redactedLogs = rawLogs
+                // Matches "title: ", "Title=", etc. and redacts the rest of the line
+                .replace(Regex("(?i)(title[:=]\\s*).+"), "$1[title]")
+                // Matches "id: ", "videoID=", etc. followed by exactly 11 characters
+                .replace(Regex("(?i)(id[:=]\\s*)[a-zA-Z0-9_-]{11}"), "$1[id]")
+                // Matches YouTube URL queries like "v=dQw4w9WgXcQ"
+                .replace(Regex("v=[a-zA-Z0-9_-]{11}"), "v=[id]")
+
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("SponsorSkip Logs", tvLogs.text)
+            val clip = ClipData.newPlainText("SponsorSkip Logs", redactedLogs)
             clipboard.setPrimaryClip(clip)
-            Toast.makeText(this, "Logs copied!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Redacted logs copied!", Toast.LENGTH_SHORT).show()
         }
 
         btnClear.setOnClickListener {

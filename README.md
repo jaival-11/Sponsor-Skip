@@ -4,7 +4,7 @@
 
 # Sponsor Skip
 
-### <a href="https://github.com/ajayyy/SponsorBlock">SponsorBlock</a> for Vanilla (stock) YouTube App
+### <a href="https://github.com/ajayyy/SponsorBlock">SponsorBlock</a> for native android
 
 <br/>
 
@@ -20,36 +20,36 @@
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
 | Section | Description |
 | :--- | :--- |
-| [✨ Features](#features) | What the app can do |
-| [🛠️ How It Works](#how-it-works) | The technical workflow |
-| [📥 Where to Get It (Download)](#where-to-get-it) | Download links for the latest stable APK |
-| [💻 Build from Source](#build-from-source) | Prerequisites and compilation instructions |
-| [🤝 Contributions](#contributions) | Guidelines for contributing to the repository |
-| [🐛 Bug Reports & 💡 Feature Suggestions](#bug-reports-feature-suggestions) | How to report issues or request new features |
-| [🔮 Roadmap](#roadmap) | Upcoming features and future release plans |
-| [📚 Under the Hood](#under-the-hood-for-developers) | Tech stack, core architecture, and third-party libraries |
-| [🙏 Attributions & Credits](#attributions-credits) | Acknowledgments of third-party tools and creators |
-| [📄 Privacy Policy](#privacy-policy) | Link to the complete Privacy Policy |
-| [⚠️ Disclaimer](#disclaimer) | Terms of service, liability, and AI disclosures |
+| [Features](#features) | What the app can do |
+| [How It Works](#how-it-works) | The technical workflow |
+| [Where to Get It (Download)](#where-to-get-it) | Download links for the latest stable APK |
+| [Build from Source](#build-from-source) | Prerequisites and compilation instructions |
+| [Contributions](#contributions) | Guidelines for contributing to the repository |
+| [Bug Reports & Feature Suggestions](#bug-reports-feature-suggestions) | How to report issues or request new features |
+| [Roadmap](#roadmap) | Upcoming features and future release plans |
+| [Under the Hood](#under-the-hood-for-developers) | Tech stack, core architecture, and third-party libraries |
+| [Attributions & Credits](#attributions-credits) | Acknowledgments of third-party tools and creators |
+| [Privacy Policy](#privacy-policy) | Link to the complete Privacy Policy |
+| [Disclaimer](#disclaimer) | Terms of service, liability, and AI disclosures |
 | [License](#license) | GNU General Public License v3.0 details |
-
----
-
-<h1><a id="screenshots"></a>🖼 Screenshots</h1>
-
-<img src="https://codeberg.org/attachments/1e85613c-e723-4a5e-8d2a-b5648044dae9" alt="Home screen" width="30%" />
-<img src="https://codeberg.org/attachments/6459b1f4-5947-46e5-bda7-b638b1145c42" alt="Settings Screen" width="30%" />
-<img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
 
 </div>
 
 ---
 
-## ✨️ Features
+<h2><a id="screenshots"></a>Screenshots</h2>
+
+<img src="https://codeberg.org/attachments/1e85613c-e723-4a5e-8d2a-b5648044dae9" alt="Home screen" width="30%" />
+<img src="https://codeberg.org/attachments/6459b1f4-5947-46e5-bda7-b638b1145c42" alt="Settings Screen" width="30%" />
+<img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
+
+---
+
+## Features
 
 * **Stock YouTube Support:** Works directly with the official, unmodded YouTube app. No root access, patching, or third-party clients required.
 * **Granular Segment Control:** Fully customize your viewing experience. Choose to automatically skip or ignore any of the standard SponsorBlock categories:
@@ -69,7 +69,7 @@ See [Roadmap](#roadmap) for upcoming features!
 
 ---
 
-## 🛠️ How it works
+## How it works
 
 **Sponsor Skip** uses a clever workaround relying on Android's native media APIs.
 
@@ -82,7 +82,7 @@ For more technical details refer [Under the Hood](#under-the-hood-for-developers
 
 ---
 
-## 📥 Where to Get It
+## Where to Get It
 
 You can download the latest compiled APK directly from the following sources:
 
@@ -103,7 +103,7 @@ You can download the latest compiled APK directly from the following sources:
   </tr>
 </table>
         
-## 💻 Build from Source
+## Build from Source
 
 If you prefer to compile the app yourself, you can easily build it from the source code using the included Gradle wrapper. 
 
@@ -122,7 +122,7 @@ cd Sponsor-Skip
 ```
 ---
 
-## 🤝 Contributions
+## Contributions
 
 Contributions from the open-source community are always welcome!
 
@@ -132,9 +132,11 @@ Contributions from the open-source community are always welcome!
 4. Push to the branch (`git push origin feature/AmazingFeature`).
 5. Open a Pull Request!
 
-## 🐛 Bug Reports & 💡 Feature Suggestions
+---
 
-Encountered a bug or have a brilliant idea to make Sponsor Skip even better? I track everything through [Codeberg Issues](https://codeberg.org/jaival/Sponsor-Skip/issues).
+## Bug Reports & Feature Suggestions
+
+Encountered a bug or have a brilliant idea to make Sponsor Skip even better?
 
 * **Found a bug?**   
 
@@ -144,25 +146,26 @@ Open a [Bug Report](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template
 
 Open a [Feature Request](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2ffeature_request.yml) using the provided template and describe how it would improve the app. 
 
-### ❓️Got any questions?
+### Got any questions?
 
 Feel free to open an [Issue](https://codeberg.org/jaival/Sponsor-Skip/issues/new/choose)
 
 *You can also contact me directly via details given at the top, though [Codeberg Issues](https://codeberg.org/jaival/SponsorSkip/issues) is preferred.*
 
-## 🔮 Roadmap
+---
+
+## Roadmap
 
 Here is a quick roadmap of what is currently planned (no promises) for future updates:  
 
 * **Multi-app support:** Add support for apps other than stock YouTube app, like native android browsers.
 * **Quick Settings Tile and app shortcut:** Quickly disable or enable service via a quick settings tiles or an app shortcut.
 * **Custom SponsorBlock API:** Option to use SponsorBlock API other than default ones.
-* **Skip Once:** Third option to have a button overlay to skip segment, instead of skipping on its own.
 * **Backup & Restore:** Export and import your segment configurations and time-saved stats so you never lose your data when switching phones.
 
 ---
 
-## 📚 Under the hood (for Developers)
+## Under the hood (for Developers)
 
 ### Tech Stack
 
@@ -193,7 +196,7 @@ To keep the application as lightweight as possible, external dependencies are ke
 
 ---
 
-## 🙏 Attributions & Credits
+## Attributions & Credits
 
 This project stands on the shoulders of giants. A massive thank you to the developers, projects, and communities that make Sponsor Skip possible:
 
@@ -210,6 +213,9 @@ This project stands on the shoulders of giants. A massive thank you to the devel
 ### 4. Networking & Infrastructure
 * **[OkHttp](https://square.github.io/okhttp/) & [Gson](https://github.com/google/gson):** (By Square and Google). Essential libraries utilized for handling the asynchronous network requests and JSON parsing required to communicate with the SponsorBlock API.
 
+### 5. [Sameera](https://github.com/sameerasw): Thank you for helping out with app documentation and guidance related to publishing 🙏❤️.
+
+
 ---
 
 ## Privacy Policy
@@ -217,7 +223,7 @@ Read complete Privacy Policy (human-readable) at [Privacy Policy](PRIVACY.md).
 
 ---
 
-## ⚠️  Disclaimer
+## Disclaimer
 
 ### Third-Party Affiliation
 Sponsor Skip is an independent, open-source project. It is not affiliated with, endorsed by, or in any way officially connected to YouTube, Google LLC, or the SponsorBlock project. All product and company names are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.
