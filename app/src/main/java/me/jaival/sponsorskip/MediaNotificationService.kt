@@ -46,6 +46,7 @@ class MediaNotificationService : NotificationListenerService() {
     private var skipSegments = mutableListOf<Segment>()
     private var ytController: MediaController? = null
     private var trackingJob: Job? = null
+    private var fetchJob: Job? = null
     private var sessionManager: MediaSessionManager? = null
     private var currentTitle = ""
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -55,12 +56,46 @@ class MediaNotificationService : NotificationListenerService() {
             if (!SettingsManager.isServiceEnabled) return
             val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
                 ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE) ?: ""
+            val initialDuration = metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
 
             if (title.isNotBlank() && title != currentTitle) {
                 currentTitle = title
                 AppLogger.log("[SERVICE] === METADATA DETECTED ===")
-                AppLogger.log("[SERVICE] Extracted Title: '$title'")
-                scope.launch { fetchSegmentsAndTrack(title) }
+                
+                fetchJob?.cancel()
+                fetchJob = scope.launch {
+                    if (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING) {
+                        AppLogger.log("[SERVICE] Title: '$title' is buffering or paused. Waiting for playback to begin...")
+                        
+                        // Check state every 400ms until playback officially begins
+                        while (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING && isActive) {
+                            delay(400)
+                        }
+                        
+                        if (!isActive) {
+                            AppLogger.log("[SERVICE] Fetch aborted: User skipped before video loaded.")
+                            return@launch
+                        }
+                        AppLogger.log("[SERVICE] Playback fully started for '$title'.")
+                    }
+                    
+                    // The video is now playing. Grab the freshest metadata to fix the 0-duration bug!
+                    val freshMetadata = ytController?.metadata
+                    val actualDuration = freshMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: initialDuration
+
+                    if (actualDuration <= 181000L) {
+                        AppLogger.log("[SERVICE] Title: '$title' | Duration: ${actualDuration}ms. (Shorts/Scroll suspect -> Adding 1.5s debounce delay)")
+                        delay(1500)
+                    } else {
+                        AppLogger.log("[SERVICE] Title: '$title' | Duration: ${actualDuration}ms. (Long-form video -> Bypassing delay)")
+                    }
+                    
+                    if (isActive) {
+                        fetchSegmentsAndTrack(title)
+                    } else {
+                        AppLogger.log("[SERVICE] Fetch aborted: User scrolled away before debounce timer finished.")
+                    }
+                }
             }
         }
     }
@@ -71,6 +106,7 @@ class MediaNotificationService : NotificationListenerService() {
                 if (!SettingsManager.isServiceEnabled) {
                     AppLogger.log("[SERVICE] KILL SIGNAL RECEIVED. Wiping memory and unregistering hooks.")
                     trackingJob?.cancel()
+                    fetchJob?.cancel()
                     ytController?.unregisterCallback(callback)
                     ytController = null
                     currentTitle = ""
@@ -118,10 +154,9 @@ class MediaNotificationService : NotificationListenerService() {
 
     private fun handleSessions(sessions: List<MediaController>?) {
         if (!SettingsManager.isServiceEnabled) return
-        
-        // --- THE FIX IS HERE ---
+
         val newYtController = sessions?.find { SettingsManager.targetPackages.contains(it.packageName) }
-        
+
         if (newYtController != null) {
             if (ytController?.sessionToken == newYtController.sessionToken) return
             AppLogger.log("[SERVICE] Hooked into MediaController (Token: ${newYtController.sessionToken}, Package: ${newYtController.packageName}).")
@@ -136,6 +171,7 @@ class MediaNotificationService : NotificationListenerService() {
                 ytController = null
                 currentTitle = ""
                 trackingJob?.cancel()
+                fetchJob?.cancel()
                 skipSegments.clear()
             }
         }
@@ -149,28 +185,28 @@ class MediaNotificationService : NotificationListenerService() {
                 .url("https://www.youtube.com/results?search_query=$query")
                 .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
                 .build()
-            
+
             val searchRes = client.newCall(searchReq).execute()
             AppLogger.log("[SCRAPER] Search HTTP Response Code: ${searchRes.code}")
             val html = searchRes.body?.string() ?: ""
             AppLogger.log("[SCRAPER] Downloaded ${html.length} characters of HTML.")
-            
+
             val regex = Regex("""/watch\?v=([a-zA-Z0-9_-]{11})""")
             val match = regex.find(html)
 
             if (match == null) {
                 AppLogger.log("[SCRAPER ERROR] Regex failed to find a valid 11-character ID.")
-                showToast("Error: Could not extract Video ID")
+                if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID")
                 return
             }
 
             val videoId = match.groupValues[1]
             AppLogger.log("[SCRAPER] Found Video ID: $videoId. Building SponsorBlock API Request...")
-            
-            val categoriesArr = """["sponsor","intro","outro","interaction","selfpromo","music_offtopic","preview","filler"]"""
+
+            val categoriesArr = """["sponsor","intro","outro","interaction","selfpromo","music_offtopic","preview","filler","hook"]"""
             val encCategories = URLEncoder.encode(categoriesArr, "UTF-8")
             val apiUrl = "https://sponsor.ajay.app/api/skipSegments?videoID=$videoId&categories=$encCategories"
-            
+
             AppLogger.log("[API] Executing GET: $apiUrl")
             val sponsorReq = Request.Builder().url(apiUrl).build()
             val sponsorRes = client.newCall(sponsorReq).execute()
@@ -178,13 +214,13 @@ class MediaNotificationService : NotificationListenerService() {
 
             if (!sponsorRes.isSuccessful) {
                 AppLogger.log("[API] Request failed or no segments exist for this video.")
-                showToast("No segments are there for the video")
+                if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the video")
                 return
             }
 
             val sponsorJson = JSONArray(sponsorRes.body?.string() ?: "[]")
             AppLogger.log("[API] Successfully parsed JSON Array containing ${sponsorJson.length()} raw blocks.")
-            
+
             skipSegments.clear()
             var configuredToSkipCount = 0
 
@@ -192,10 +228,10 @@ class MediaNotificationService : NotificationListenerService() {
                 val obj = sponsorJson.getJSONObject(i)
                 val segment = obj.getJSONArray("segment")
                 val category = obj.getString("category")
-                
+
                 val action = SettingsManager.getSegmentAction(category)
                 AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $action")
-                
+
                 if (action == 1) {
                     configuredToSkipCount++
                 }
@@ -207,7 +243,7 @@ class MediaNotificationService : NotificationListenerService() {
 
             if (skipSegments.isEmpty()) {
                 AppLogger.log("[TRACKER] Array is empty after processing. Terminating loop.")
-                showToast("No segments are there for the video")
+                if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the video")
             } else {
                 AppLogger.log("[TRACKER] Engaging playback loop. Monitoring ${skipSegments.size} total blocks ($configuredToSkipCount armed for skip).")
                 showToast("Loaded ${skipSegments.size} segments ($configuredToSkipCount to skip)")
@@ -215,7 +251,7 @@ class MediaNotificationService : NotificationListenerService() {
             }
         } catch (e: Exception) {
             AppLogger.log("[FATAL EXCEPTION] Trace: ${e.message}")
-            showToast("Error fetching segments")
+            if (SettingsManager.isLoggingEnabled) showToast("Error fetching segments")
         }
     }
 
@@ -228,7 +264,7 @@ class MediaNotificationService : NotificationListenerService() {
                 val state = ytController?.playbackState
                 if (state?.state == PlaybackState.STATE_PLAYING) {
                     val pos = state.position
-                    
+
                     if (System.currentTimeMillis() - lastLogTime > 15000) {
                         AppLogger.log("[TRACKER] Heartbeat - Playhead at $pos ms")
                         lastLogTime = System.currentTimeMillis()
@@ -238,18 +274,18 @@ class MediaNotificationService : NotificationListenerService() {
 
                     if (hitSegment != null) {
                         AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hitSegment.category.uppercase()} at $pos ms")
-                        if (SettingsManager.getSegmentAction(hitSegment.category) == 1) { 
+                        if (SettingsManager.getSegmentAction(hitSegment.category) == 1) {
                             AppLogger.log("[TRACKER] Skip Authorized. Executing seekTo(${hitSegment.endMs})")
                             ytController?.transportControls?.seekTo(hitSegment.endMs)
-                            
+
                             val savedMs = hitSegment.endMs - hitSegment.startMs
                             SettingsManager.skippedCount += 1
                             SettingsManager.timeSavedMs += savedMs
                             sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
-                            
+
                             showToast("Skipped: ${hitSegment.category.uppercase()}")
                             skipSegments.remove(hitSegment)
-                            delay(2000) 
+                            delay(2000)
                         } else {
                             AppLogger.log("[TRACKER] Skip Denied (Configured to Off). Removing from armed array.")
                             skipSegments.remove(hitSegment)
@@ -260,7 +296,7 @@ class MediaNotificationService : NotificationListenerService() {
             }
         }
     }
-    
+
     private fun showToast(message: String) {
         mainHandler.post { Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show() }
     }

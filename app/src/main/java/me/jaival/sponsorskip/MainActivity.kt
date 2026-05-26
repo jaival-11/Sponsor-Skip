@@ -37,10 +37,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
-  private val categories = mapOf(
-    "sponsor" to "Sponsors", "intro" to "Intermissions/Intros", "outro" to "Endcards/Credits",
-    "interaction" to "Interaction Reminders", "selfpromo" to "Unpaid/Self Promotion",
-    "music_offtopic" to "Non-Music Section", "preview" to "Previews/Recaps", "filler" to "Filler Tangent"
+  private val categories = listOf(
+    Triple("sponsor", "Sponsor", "Paid promotion, paid referrals and direct advertisements. Not for self-promotion or free shout-outs to causes / creators / websites / products they like"),
+    Triple("selfpromo", "Unpaid / Self Promotion", "Similar to Sponsor except for unpaid / self promotion. Includes sections about merchandise, donations, or information about who they collaborated with"),
+    Triple("interaction", "Interaction Reminder", "A short reminder to like, subscribe or follow them in the middle of content. If it is long or about something specific, it should instead be under self promotion"),
+    Triple("intro", "Intermission / Intro Animation", "An interval without actual content. Could be a pause, static frame, or repeating animation. Does not include transitions containing information"),
+    Triple("outro", "Endcards / Credits", "Credits or when the YouTube endcards appear. Not for conclusions with information"),
+    Triple("preview", "Preview / Recap", "Collection of clips that show what is coming up or what happened in the video or in other videos of a series, where all information is repeated elsewhere"),
+    Triple("hook", "Hook / Greetings", "Narrated trailers for the upcoming video, greetings and goodbyes. Does not include sections that add additional content"),
+    Triple("filler", "Tangent / Jokes", "Tangential scenes or jokes that are not required to understand the main content of the video. Does not include sections providing context or background details"),
+    Triple("music_offtopic", "Music: Non-Music Section", "Only for use in music videos. Sections of music videos without music that are not already covered by another category")
   )
 
   private val statsReceiver = object : BroadcastReceiver() {
@@ -126,6 +132,12 @@ class MainActivity : AppCompatActivity() {
     
     
 
+    
+    try {
+        val pInfo = packageManager.getPackageInfo(packageName, 0)
+        findViewById<TextView>(R.id.tvVersion).text = "Version ${pInfo.versionName} (Tap to check)"
+    } catch (e: Exception) { }
+    
     findViewById<View>(R.id.cardUpdate).setOnClickListener { it.haptic(); lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, true) } }
     findViewById<View>(R.id.btnSetPerms).setOnClickListener { it.haptic(); startActivity(Intent(this, PermissionsActivity::class.java)) }
     btnCustomApps.setOnClickListener { it.haptic(); showCustomAppsDialog() }
@@ -226,37 +238,88 @@ class MainActivity : AppCompatActivity() {
     for (i in 0 until container.childCount) {
       val card = container.getChildAt(i) as MaterialCardView
       card.alpha = if (isEnabled) 1.0f else 0.5f
-      val rg = (card.getChildAt(0) as LinearLayout).getChildAt(1) as RadioGroup
+      val rg = (card.getChildAt(0) as LinearLayout).getChildAt(2) as RadioGroup
       for (j in 0 until rg.childCount) rg.getChildAt(j).isEnabled = isEnabled
     }
   }
 
   private fun populateSegments() {
     val container = findViewById<LinearLayout>(R.id.segmentsContainer)
-    categories.forEach { (key, label) ->
+    categories.forEach { info ->
+      val key = info.first
+      val label = info.second
+      val desc = info.third
+
       val card = MaterialCardView(this).apply {
         layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 0, 0, 24) }
         setCardBackgroundColor(Color.TRANSPARENT)
         strokeWidth = 2
       }
       val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(32, 32, 32, 32) }
-      val title = TextView(this).apply { text = label; textSize = 16f; setTypeface(null, Typeface.BOLD); setPadding(0, 0, 0, 16) }
+      
+      // Header containing the title and the dropdown arrow
+      val headerLayout = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+        gravity = android.view.Gravity.CENTER_VERTICAL
+        setPadding(0, 0, 0, 16)
+      }
+      
+      val title = TextView(this).apply { 
+        text = label
+        textSize = 16f
+        setTypeface(null, Typeface.BOLD)
+        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+      }
+      
+      val arrow = TextView(this).apply {
+        text = "▼"
+        textSize = 14f
+        setPadding(16, 0, 0, 0)
+      }
+      
+      headerLayout.addView(title)
+      headerLayout.addView(arrow)
+      
+      // The hidden description text box
+      val descText = TextView(this).apply {
+        text = desc
+        textSize = 14f
+        visibility = View.GONE
+        setPadding(0, 0, 0, 16)
+        alpha = 0.8f // Slight dimming to differentiate from the title
+      }
+      
+      // Toggle logic for expanding/collapsing the description
+      headerLayout.setOnClickListener {
+        it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+        if (descText.visibility == View.GONE) {
+            descText.visibility = View.VISIBLE
+            arrow.text = "▲"
+        } else {
+            descText.visibility = View.GONE
+            arrow.text = "▼"
+        }
+      }
+
       val radioGroup = RadioGroup(this).apply {
         orientation = RadioGroup.HORIZONTAL
         val offId = View.generateViewId()
         val skipId = View.generateViewId()
-        addView(RadioButton(context).apply { id = offId; text = "Off" })
-        addView(RadioButton(context).apply { id = skipId; text = "Skip automatically" })
+        addView(RadioButton(context).apply { id = offId; text = "Off"; contentDescription = "$label Off"; minHeight = (48 * resources.displayMetrics.density).toInt() })
+        addView(RadioButton(context).apply { id = skipId; text = "Skip automatically"; contentDescription = "$label Skip automatically"; minHeight = (48 * resources.displayMetrics.density).toInt() })
         check(if (SettingsManager.getSegmentAction(key) == 1) skipId else offId)
         setOnCheckedChangeListener { view, checkedId ->
-          if (checkedId != -1) { 
+          if (checkedId != -1) {
             view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             val action = if (checkedId == skipId) 1 else 0
             SettingsManager.setSegmentAction(key, action)
           }
         }
       }
-      layout.addView(title)
+      
+      layout.addView(headerLayout)
+      layout.addView(descText)
       layout.addView(radioGroup)
       card.addView(layout)
       container.addView(card)
@@ -339,6 +402,8 @@ class MainActivity : AppCompatActivity() {
               val searchInput = EditText(this@MainActivity).apply {
                   hint = "Search apps..."
                   setSingleLine()
+                  minHeight = (48 * resources.displayMetrics.density).toInt()
+                  setHintTextColor(android.graphics.Color.parseColor("#B0B0B0"))
               }
               
               val listView = ListView(this@MainActivity).apply {
