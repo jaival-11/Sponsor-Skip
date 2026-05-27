@@ -42,8 +42,8 @@
 
 <h2><a id="screenshots"></a>Screenshots</h2>
 
-<img src="https://codeberg.org/attachments/1e85613c-e723-4a5e-8d2a-b5648044dae9" alt="Home screen" width="30%" />
-<img src="https://codeberg.org/attachments/38f342f0-a084-4380-80b8-5120918d59a2" alt="Settings Screen" width="30%" />
+<img src="https://codeberg.org/attachments/fb302b5b-caf4-4f79-b5c9-2e7a8a65e60f" alt="Home screen" width="30%" />
+<img src="https://codeberg.org/attachments/77c77205-8a3a-46f1-b5ba-db43b505829e" alt="Settings Screen" width="30%" />
 <img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
 
 ---
@@ -54,16 +54,17 @@
 * **Multi-app support:** Other than official youtube app, you can select other apps to implement Sponsor Skip for those apps too.
 * **Granular Segment Control:** Fully customize your viewing experience. Choose to automatically skip or ignore any of the standard SponsorBlock categories:
   * Sponsors
-  * Intermissions & Intros
-  * Endcards & Credits
-  * Interaction Reminders (Subscribe/Like)
-  * Unpaid & Self-Promotion
-  * Non-Music Sections
-  * Previews & Recaps
-  * Filler Tangents
+  * Unpaid / Self Promotion
+  * Interaction Reminder
+  * Intermission / Intro Animation
+  * Endcards / Credits
+  * Preview / Recap
+  * Hook / Greetings
+  * Tangent / Jokes
+  * Music: Non-Music Section
 * **Time Saved Tracking:** Keep a count of exactly how many segments you have skipped and the total time you have saved. You can reset the count by tapping on it.
-* **Modern & Lightweight UI:** Built with a clean, heavily-rounded Material Design aesthetic with monet themeing. 
-* **Privacy Respecting:** It runs locally on your device and does not communicate with unnecessary third parties. No data is collected by developer. For more info refer to [Privacy Policy](PRIVACY.md)
+* **Modern & Lightweight UI:** Built with a clean, Material Design aesthetic with monet themeing. 
+* **Privacy Respecting:** It runs locally on your device and does not communicate with unnecessary third parties. No data is collected by developer. For more info refer to [Privacy Policy](#privacy-policy)
 
 ---
 
@@ -207,7 +208,9 @@ This project stands on the shoulders of giants. A massive thank you to the devel
 ---
 
 ## Privacy Policy
-Read complete Privacy Policy (human-readable) at [Privacy Policy](PRIVACY.md). 
+Read complete Privacy Policy (human-readable) at [Privacy Policy](PRIVACY.md).  
+  
+*The [Privacy Policy](PRIVACY.md) was last updated on 25th May, 2026.*
 
 ---
 
