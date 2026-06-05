@@ -1,21 +1,3 @@
-/*
- * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
- * Copyright (C) 2026 Jaival
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package me.jaival.sponsorskip
 
 import android.content.ClipData
@@ -41,6 +23,7 @@ class DebugActivity : AppCompatActivity() {
         val tvLogs = findViewById<TextView>(R.id.tvLogs)
         val svLogs = findViewById<ScrollView>(R.id.svLogs)
         val switchLogs = findViewById<MaterialSwitch>(R.id.switchLogs)
+        val switchRedact = findViewById<MaterialSwitch>(R.id.switchRedact)
         val btnRefresh = findViewById<Button>(R.id.btnRefresh)
         val btnCopy = findViewById<Button>(R.id.btnCopy)
         val btnClear = findViewById<Button>(R.id.btnClear)
@@ -51,6 +34,7 @@ class DebugActivity : AppCompatActivity() {
             btnClear.isEnabled = isEnabled
             btnClear.alpha = if (isEnabled) 1.0f else 0.5f
             svLogs.visibility = if (isEnabled) View.VISIBLE else View.GONE
+            switchRedact.visibility = if (isEnabled) View.VISIBLE else View.GONE
         }
 
         switchLogs.isChecked = SettingsManager.isLoggingEnabled
@@ -63,23 +47,26 @@ class DebugActivity : AppCompatActivity() {
         }
 
         btnRefresh.setOnClickListener { refreshLogs(tvLogs) }
-        
+
         btnCopy.setOnClickListener {
             val rawLogs = tvLogs.text.toString()
-            
-            // Regex to redact titles and IDs before copying to clipboard
-            val redactedLogs = rawLogs
-                // Matches "title: ", "Title=", etc. and redacts the rest of the line
-                .replace(Regex("(?i)(title[:=]\\s*).+"), "$1[title]")
-                // Matches "id: ", "videoID=", etc. followed by exactly 11 characters
-                .replace(Regex("(?i)(id[:=]\\s*)[a-zA-Z0-9_-]{11}"), "$1[id]")
-                // Matches YouTube URL queries like "v=dQw4w9WgXcQ"
-                .replace(Regex("v=[a-zA-Z0-9_-]{11}"), "v=[id]")
+
+            val finalLogs = if (switchRedact.isChecked) {
+                rawLogs
+                    .replace(Regex("(?i)(title[:=]\\s*).+"), "$1[title]")
+                    .replace(Regex("(?i)(id[:=]\\s*)[a-zA-Z0-9_-]{11}"), "$1[id]")
+                    .replace(Regex("v=[a-zA-Z0-9_-]{11}"), "v=[id]")
+                    .replace(Regex("(?i)(Title: )'[^']*'"), "$1[title]")
+                    .replace(Regex("(?i)(started for )'[^']*'"), "$1[title]")
+                    .replace(Regex("(?i)(Extracted Title: )'[^']*'"), "$1[title]")
+            } else {
+                rawLogs
+            }
 
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("SponsorSkip Logs", redactedLogs)
+            val clip = ClipData.newPlainText("SponsorSkip Logs", finalLogs)
             clipboard.setPrimaryClip(clip)
-            Toast.makeText(this, "Redacted logs copied!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, if (switchRedact.isChecked) "Redacted logs copied!" else "Raw logs copied!", Toast.LENGTH_SHORT).show()
         }
 
         btnClear.setOnClickListener {

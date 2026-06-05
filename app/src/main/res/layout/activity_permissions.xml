@@ -7,5 +7,7 @@
         <TextView android:id="@+id/permToast" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:textSize="16sp" android:background="?attr/selectableItemBackground"/>
         <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
         <TextView android:id="@+id/permBattery" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:textSize="16sp" android:background="?attr/selectableItemBackground"/>
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
+        <TextView android:id="@+id/permHelp" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="16dp" android:textSize="14sp" android:textColor="?attr/colorPrimary" android:text="Facing problems in granting permission?" android:background="?attr/selectableItemBackground"/>
     </LinearLayout>
 </LinearLayout>

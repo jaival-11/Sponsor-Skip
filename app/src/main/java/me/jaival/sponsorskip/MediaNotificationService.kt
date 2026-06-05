@@ -1,21 +1,3 @@
-/*
- * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
- * Copyright (C) 2026 Jaival
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package me.jaival.sponsorskip
 
 import android.content.BroadcastReceiver
@@ -37,6 +19,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import java.net.URLEncoder
+import kotlin.math.max
 
 data class Segment(val startMs: Long, val endMs: Long, val category: String)
 
@@ -50,6 +33,10 @@ class MediaNotificationService : NotificationListenerService() {
     private var sessionManager: MediaSessionManager? = null
     private var currentTitle = ""
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    private val sessionListener = MediaSessionManager.OnActiveSessionsChangedListener { sessions ->
+        handleSessions(sessions)
+    }
 
     private val callback = object : MediaController.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
@@ -66,12 +53,9 @@ class MediaNotificationService : NotificationListenerService() {
                 fetchJob = scope.launch {
                     if (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING) {
                         AppLogger.log("[SERVICE] Title: '$title' is buffering or paused. Waiting for playback to begin...")
-                        
-                        // Check state every 400ms until playback officially begins
                         while (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING && isActive) {
                             delay(400)
                         }
-                        
                         if (!isActive) {
                             AppLogger.log("[SERVICE] Fetch aborted: User skipped before video loaded.")
                             return@launch
@@ -79,7 +63,6 @@ class MediaNotificationService : NotificationListenerService() {
                         AppLogger.log("[SERVICE] Playback fully started for '$title'.")
                     }
                     
-                    // The video is now playing. Grab the freshest metadata to fix the 0-duration bug!
                     val freshMetadata = ytController?.metadata
                     val actualDuration = freshMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: initialDuration
 
@@ -124,7 +107,6 @@ class MediaNotificationService : NotificationListenerService() {
         super.onCreate()
         SettingsManager.init(this)
         AppLogger.init(this)
-        AppLogger.log("[SERVICE] NotificationListenerService onCreate() executed.")
         val filter = IntentFilter("me.jaival.sponsorskip.TOGGLE_SERVICE")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(toggleReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
@@ -135,16 +117,11 @@ class MediaNotificationService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        AppLogger.log("[SERVICE] System granted active listener connection.")
         sessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
         val component = ComponentName(this, MediaNotificationService::class.java)
         try {
-            val sessionListener = MediaSessionManager.OnActiveSessionsChangedListener { sessions ->
-                handleSessions(sessions)
-            }
             sessionManager?.addOnActiveSessionsChangedListener(sessionListener, component)
             if (SettingsManager.isServiceEnabled) {
-                AppLogger.log("[SERVICE] Checking for currently active media sessions...")
                 handleSessions(sessionManager?.getActiveSessions(component))
             }
         } catch (e: Exception) {
@@ -152,14 +129,26 @@ class MediaNotificationService : NotificationListenerService() {
         }
     }
 
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        AppLogger.log("[SERVICE] ⚠️ WARNING: System abruptly unbound the NotificationListenerService!")
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                requestRebind(ComponentName(this, MediaNotificationService::class.java))
+                AppLogger.log("[SERVICE] Fired requestRebind() to wake the service back up.")
+            }
+        } catch (e: Exception) {
+            AppLogger.log("[SERVICE] Rebind request failed: ${e.message}")
+        }
+    }
+
     private fun handleSessions(sessions: List<MediaController>?) {
         if (!SettingsManager.isServiceEnabled) return
-
         val newYtController = sessions?.find { SettingsManager.targetPackages.contains(it.packageName) }
 
         if (newYtController != null) {
             if (ytController?.sessionToken == newYtController.sessionToken) return
-            AppLogger.log("[SERVICE] Hooked into MediaController (Token: ${newYtController.sessionToken}, Package: ${newYtController.packageName}).")
+            AppLogger.log("[SERVICE] Hooked into MediaController (Token: ${newYtController.sessionToken}).")
             ytController?.unregisterCallback(callback)
             ytController = newYtController
             ytController?.registerCallback(callback)
@@ -179,29 +168,25 @@ class MediaNotificationService : NotificationListenerService() {
 
     private suspend fun fetchSegmentsAndTrack(title: String) {
         try {
-            AppLogger.log("[SCRAPER] Encoding title and firing background search request...")
             val query = URLEncoder.encode(title, "UTF-8")
             val searchReq = Request.Builder()
                 .url("https://www.youtube.com/results?search_query=$query")
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
                 .build()
 
             val searchRes = client.newCall(searchReq).execute()
-            AppLogger.log("[SCRAPER] Search HTTP Response Code: ${searchRes.code}")
             val html = searchRes.body?.string() ?: ""
-            AppLogger.log("[SCRAPER] Downloaded ${html.length} characters of HTML.")
 
             val regex = Regex("""/watch\?v=([a-zA-Z0-9_-]{11})""")
             val match = regex.find(html)
 
             if (match == null) {
-                AppLogger.log("[SCRAPER ERROR] Regex failed to find a valid 11-character ID.")
                 if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID")
                 return
             }
 
             val videoId = match.groupValues[1]
-            AppLogger.log("[SCRAPER] Found Video ID: $videoId. Building SponsorBlock API Request...")
+            AppLogger.log("[SCRAPER] Extracted Video ID: $videoId")
 
             val categoriesArr = """["sponsor","intro","outro","interaction","selfpromo","music_offtopic","preview","filler","hook"]"""
             val encCategories = URLEncoder.encode(categoriesArr, "UTF-8")
@@ -213,16 +198,14 @@ class MediaNotificationService : NotificationListenerService() {
             AppLogger.log("[API] Response Code: ${sponsorRes.code}")
 
             if (!sponsorRes.isSuccessful) {
-                AppLogger.log("[API] Request failed or no segments exist for this video.")
                 if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the video")
                 return
             }
 
             val sponsorJson = JSONArray(sponsorRes.body?.string() ?: "[]")
-            AppLogger.log("[API] Successfully parsed JSON Array containing ${sponsorJson.length()} raw blocks.")
-
+            
             skipSegments.clear()
-            var configuredToSkipCount = 0
+            val armedSegments = mutableListOf<Segment>()
 
             for (i in 0 until sponsorJson.length()) {
                 val obj = sponsorJson.getJSONObject(i)
@@ -230,23 +213,39 @@ class MediaNotificationService : NotificationListenerService() {
                 val category = obj.getString("category")
 
                 val action = SettingsManager.getSegmentAction(category)
-                AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $action")
+                val actionStr = if (action == 1) "Skip" else "Off"
+                AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $actionStr")
 
                 if (action == 1) {
-                    configuredToSkipCount++
+                    val start = (segment.getDouble(0) * 1000).toLong()
+                    val end = (segment.getDouble(1) * 1000).toLong()
+                    armedSegments.add(Segment(start, end, category))
                 }
+            }
 
-                val start = (segment.getDouble(0) * 1000).toLong()
-                val end = (segment.getDouble(1) * 1000).toLong()
-                skipSegments.add(Segment(start, end, category))
+            val sorted = armedSegments.sortedBy { it.startMs }
+            val armedCount = sorted.size
+            
+            if (sorted.isNotEmpty()) {
+                var current = sorted[0]
+                for (i in 1 until sorted.size) {
+                    val next = sorted[i]
+                    if (current.endMs >= next.startMs - 1000) {
+                        AppLogger.log("[TRACKER] Fusing adjacent segments: [${current.category}] and [${next.category}] into a multiple block.")
+                        current = Segment(current.startMs, max(current.endMs, next.endMs), "multiple")
+                    } else {
+                        skipSegments.add(current)
+                        current = next
+                    }
+                }
+                skipSegments.add(current)
             }
 
             if (skipSegments.isEmpty()) {
-                AppLogger.log("[TRACKER] Array is empty after processing. Terminating loop.")
                 if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the video")
             } else {
-                AppLogger.log("[TRACKER] Engaging playback loop. Monitoring ${skipSegments.size} total blocks ($configuredToSkipCount armed for skip).")
-                showToast("Loaded ${skipSegments.size} segments ($configuredToSkipCount to skip)")
+                AppLogger.log("[TRACKER] Engaging playback loop. Monitoring ${skipSegments.size} merged blocks (from $armedCount original enabled segments).")
+                showToast("Loaded $armedCount segments to skip")
                 startTracking()
             }
         } catch (e: Exception) {
@@ -266,7 +265,6 @@ class MediaNotificationService : NotificationListenerService() {
                     val pos = state.position
 
                     if (System.currentTimeMillis() - lastLogTime > 15000) {
-                        AppLogger.log("[TRACKER] Heartbeat - Playhead at $pos ms")
                         lastLogTime = System.currentTimeMillis()
                     }
 
@@ -274,22 +272,23 @@ class MediaNotificationService : NotificationListenerService() {
 
                     if (hitSegment != null) {
                         AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hitSegment.category.uppercase()} at $pos ms")
-                        if (SettingsManager.getSegmentAction(hitSegment.category) == 1) {
-                            AppLogger.log("[TRACKER] Skip Authorized. Executing seekTo(${hitSegment.endMs})")
-                            ytController?.transportControls?.seekTo(hitSegment.endMs)
+                        AppLogger.log("[TRACKER] Skip Authorized. Executing seekTo(${hitSegment.endMs})")
+                        ytController?.transportControls?.seekTo(hitSegment.endMs)
 
-                            val savedMs = hitSegment.endMs - hitSegment.startMs
-                            SettingsManager.skippedCount += 1
-                            SettingsManager.timeSavedMs += savedMs
-                            sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
+                        val savedMs = hitSegment.endMs - hitSegment.startMs
+                        SettingsManager.skippedCount += if (hitSegment.category == "multiple") 2 else 1
+                        SettingsManager.timeSavedMs += savedMs
+                        sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
 
-                            showToast("Skipped: ${hitSegment.category.uppercase()}")
-                            skipSegments.remove(hitSegment)
-                            delay(2000)
+                        if (hitSegment.category == "multiple") {
+                            AppLogger.log("[TRACKER] Skipped a fused multi-segment block.")
+                            showToast("Skipped Multiple segments")
                         } else {
-                            AppLogger.log("[TRACKER] Skip Denied (Configured to Off). Removing from armed array.")
-                            skipSegments.remove(hitSegment)
+                            showToast("Skipped: ${hitSegment.category.uppercase()}")
                         }
+                        
+                        skipSegments.remove(hitSegment)
+                        delay(2000)
                     }
                 }
                 delay(1000)
@@ -302,7 +301,6 @@ class MediaNotificationService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
-        AppLogger.log("[SERVICE] NotificationListenerService destroyed by system.")
         unregisterReceiver(toggleReceiver)
         scope.cancel()
         super.onDestroy()

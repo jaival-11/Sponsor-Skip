@@ -5,7 +5,7 @@ app/build/
 local.properties
 .idea/
 
-# EXTREMELY IMPORTANT: Do not upload the signing key or APKs!
+# EXTREMELY IMPORTANT:
 *.keystore
 *.jks
 *.apk

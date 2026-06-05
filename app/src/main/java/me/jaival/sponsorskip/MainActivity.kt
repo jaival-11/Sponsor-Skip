@@ -5,6 +5,8 @@
 package me.jaival.sponsorskip
 
 import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -145,7 +147,7 @@ class MainActivity : AppCompatActivity() {
     findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip"))) }
     findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
     findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
-    findViewById<View>(R.id.btnSetContact).setOnClickListener { it.haptic(); val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:jaival7909@gmail.com?subject=" + Uri.encode("Sponsor Skip - App Contact")) }; startActivity(Intent.createChooser(intent, "Send Email")) }
+    findViewById<View>(R.id.btnSetContact).setOnClickListener { it.haptic(); val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { "Unknown" }; val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:jaival7909@gmail.com?subject=" + Uri.encode("Sponsor Skip - v$version")) }; startActivity(Intent.createChooser(intent, "Send Email")) }
     findViewById<View>(R.id.btnSetPrivacy).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md"))) }
     findViewById<View>(R.id.btnSetLicense).setOnClickListener { it.haptic(); AlertDialog.Builder(this).setTitle("License & Warranty").setMessage("Sponsor Skip: Auto-skips SponsorBlock segments in YouTube videos\nCopyright © 2026 Jaival\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.").setPositiveButton("View Full GPLv3") { _, _ -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gnu.org/licenses/gpl-3.0.html"))) }.setNegativeButton("Close", null).show() }
     findViewById<View>(R.id.btnSetCredits).setOnClickListener { view ->
@@ -231,6 +233,21 @@ class MainActivity : AppCompatActivity() {
   override fun onResume() {
     super.onResume()
     updateGreyOutState(SettingsManager.isServiceEnabled)
+  }
+
+  
+  private fun wakeUpListenerService() {
+      if (SettingsManager.isServiceEnabled && NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)) {
+          try {
+              val component = ComponentName(this, MediaNotificationService::class.java)
+              val pm = packageManager
+              pm.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+              pm.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+              AppLogger.log("[UI] Performed internal component reset to cure NLS Zombie state.")
+          } catch (e: Exception) {
+              AppLogger.log("[UI] Component reset failed: ${e.message}")
+          }
+      }
   }
 
   private fun updateGreyOutState(isEnabled: Boolean) {

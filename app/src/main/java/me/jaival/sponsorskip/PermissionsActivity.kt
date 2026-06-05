@@ -1,21 +1,3 @@
-/*
- * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
- * Copyright (C) 2026 Jaival
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package me.jaival.sponsorskip
 
 import android.content.Context
@@ -27,6 +9,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
@@ -40,14 +23,20 @@ class PermissionsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        
         val permNotif = findViewById<TextView>(R.id.permNotif)
         val permToast = findViewById<TextView>(R.id.permToast)
         val permBattery = findViewById<TextView>(R.id.permBattery)
+        val permHelp = findViewById<TextView>(R.id.permHelp)
 
         val hasListener = NotificationManagerCompat.getEnabledListenerPackages(this).contains(packageName)
         permNotif.text = "Notification Listener  " + (if (hasListener) "✅" else "❌")
-        permNotif.setOnClickListener { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
+        permNotif.setOnClickListener {
+            if (hasListener) {
+                Toast.makeText(this, "Notification listener permission already granted", Toast.LENGTH_SHORT).show()
+            } else {
+                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            }
+        }
 
         var hasToasts = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -55,25 +44,43 @@ class PermissionsActivity : AppCompatActivity() {
         }
         permToast.text = "Post Notifications (Toasts)  " + (if (hasToasts) "✅" else "❌")
         permToast.setOnClickListener {
-            if (!hasToasts && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (hasToasts) {
+                Toast.makeText(this, "Post notification permission already granted", Toast.LENGTH_SHORT).show()
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
             }
         }
 
         val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
         val isIgnoringBattery = pm.isIgnoringBatteryOptimizations(packageName)
-        permBattery.text = "Battery Optimization  " + (if (isIgnoringBattery) "✅ (Unrestricted)" else "⚠️ (Optimized)")
-        
+        permBattery.text = "Battery Optimization\n(It may fix detection issues, if faced)  \n" + (if (isIgnoringBattery) "✅ (Unrestricted)" else "⚠️ (Optimized)")
+
         permBattery.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("Battery Optimization")
-                .setMessage("If you are having issues with the app randomly stopping in the background, try disabling battery optimization to allow the service to run uninterrupted.")
+                .setMessage("If you are having issues with the app randomly stopping in the background, try disabling battery optimization to allow the service to run uninterrupted.\n\nIt is recommended to force stop the app, and reopen to ensure stability")
                 .setPositiveButton("Disable") { _, _ ->
-                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                    if (isIgnoringBattery) {
+                        Toast.makeText(this, "Battery optimization is already disabled", Toast.LENGTH_SHORT).show()
+                    } else {
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                        intent.data = Uri.parse("package:$packageName")
+                        startActivity(intent)
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        permHelp.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Read Carefully")
+                .setMessage("Please do the following to bypass restricted permission issue:\n\nClick on app info > click on ⋮ at the top > \"Allow restricted permission\". Then comeback to Sponsor Skip.")
+                .setPositiveButton("App Info") { _, _ ->
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     intent.data = Uri.parse("package:$packageName")
                     startActivity(intent)
                 }
-                .setNegativeButton("Cancel", null)
                 .show()
         }
     }

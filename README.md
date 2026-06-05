@@ -10,6 +10,8 @@
 
 [![Latest release](https://img.shields.io/gitea/v/release/jaival/Sponsor-Skip?gitea_url=https%3A%2F%2Fcodeberg.org&style=for-the-badge&labelColor=0d1117)](https://codeberg.org/jaival/Sponsor-Skip/releases/latest) [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&labelColor=0d1117&color=EA7233)](https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/LICENSE)
 
+[![Official Wiki](https://img.shields.io/badge/Listed_on-SponsorBlock_Wiki-2ea44f?style=for-the-badge&labelColor=0d1117)](https://github.com/ajayyy/SponsorBlock/wiki/Android)
+
 <br/>
 
 [![Follow on X](https://img.shields.io/badge/techironic11-1da1f2?style=for-the-badge&labelColor=0d1117&logo=x)](https://x.com/techironic11)[![Telegram Channel](https://img.shields.io/badge/Telegram-Join-0088cc?style=for-the-badge&labelColor=0d1117&logo=telegram)](https://t.me/techironic)[![Email Support](https://img.shields.io/badge/Email-Contact_Me-db4437?style=for-the-badge&labelColor=0d1117&logo=gmail)](mailto:jaival7909@gmail.com)
@@ -30,7 +32,7 @@
 | [Build from Source](#build-from-source) | Prerequisites and compilation instructions |
 | [Contributions](#contributions) | Guidelines for contributing to the repository |
 | [Bug Reports & Feature Suggestions](#bug-reports-feature-suggestions) | How to report issues or request new features |
-| [Under the Hood](#under-the-hood-for-developers) | Tech stack, core architecture, and third-party libraries |
+| [Under the Hood](#under-the-hood-for-developers) | Tech stack and  core architecture |
 | [Attributions & Credits](#attributions-credits) | Acknowledgments of third-party tools and creators |
 | [Privacy Policy](#privacy-policy) | Link to the complete Privacy Policy |
 | [Disclaimer](#disclaimer) | Terms of service, liability, and disclosures |
@@ -176,11 +178,6 @@ Sponsor Skip is built entirely in **Kotlin** and leverages modern Android develo
 * **SponsorBlock API:** Once a video ID is intercepted, the app makes an asynchronous network request to the public [SponsorBlock API](https://sponsor.ajay.app/) to retrieve the start and end timestamps for all community-submitted segments.
 * **MediaController Transport Controls:** When the player's current position enters a blocked segment, Sponsor Skip uses `MediaController.TransportControls.seekTo()` to command the Android OS to fast-forward the YouTube player to the end of the segment.
 * **Asynchronous Execution:** All network calls, background polling, and update checks are handled cleanly via **Kotlin Coroutines** (`lifecycleScope.launch`) to ensure the main UI thread is never blocked.
-
-### Third-Party Libraries
-
-To keep the application as lightweight as possible, external dependencies are kept to an absolute minimum:
-* **[AboutLibraries](https://github.com/mikepenz/AboutLibraries):** By mikepenz. Used to dynamically parse and display the open-source licenses of internal dependencies in the "Credits" UI.
 
 ---
 
