@@ -68,4 +68,8 @@ object SettingsManager {
     var timeSavedMs: Long
         get() = prefs.getLong("stat_time", 0L)
         set(value) { prefs.edit().putLong("stat_time", value).commit() }
+
+    var minSegmentDuration: Float
+        get() = prefs.getFloat("min_segment_duration", 0f)
+        set(value) { prefs.edit().putFloat("min_segment_duration", value).commit() }
 }

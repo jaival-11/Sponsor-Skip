@@ -224,12 +224,20 @@ class MediaNotificationService : NotificationListenerService() {
 
                 val action = SettingsManager.getSegmentAction(category)
                 val actionStr = if (action == 1) "Skip" else "Off"
-                AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $actionStr")
 
                 if (action == 1) {
-                    val start = (segment.getDouble(0) * 1000).toLong()
-                    val end = (segment.getDouble(1) * 1000).toLong()
-                    armedSegments.add(Segment(start, end, category))
+                    val durationSec = segment.getDouble(1) - segment.getDouble(0)
+                    val minDur = SettingsManager.minSegmentDuration.toDouble()
+                    if (durationSec < minDur) {
+                        AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $actionStr (BLOCKED: ${String.format("%.2f", durationSec)}s < ${minDur}s min duration)")
+                    } else {
+                        AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $actionStr")
+                        val start = (segment.getDouble(0) * 1000).toLong()
+                        val end = (segment.getDouble(1) * 1000).toLong()
+                        armedSegments.add(Segment(start, end, category))
+                    }
+                } else {
+                    AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $actionStr")
                 }
             }
 

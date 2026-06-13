@@ -67,7 +67,7 @@ class DebugActivity : AppCompatActivity() {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("SponsorSkip Logs", finalLogs)
             clipboard.setPrimaryClip(clip)
-            Toast.makeText(this, if (switchRedact.isChecked) "Redacted logs copied!" else "Raw logs copied!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, if (switchRedact.isChecked) "Redacted logs copied! Always check logs before sharing." else "Raw logs copied! Always check logs before sharing.", Toast.LENGTH_LONG).show()
         }
 
         btnClear.setOnClickListener {
