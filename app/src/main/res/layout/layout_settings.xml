@@ -22,7 +22,7 @@
 
                 <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sponsor Skip" android:textSize="18sp" android:textStyle="bold"/>
-                    <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Version 1.1.0 (Tap to check)" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant"/>
+                    <TextView android:id="@+id/tvVersion" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Version 1.2.0 (Tap to check)" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant"/>
                 </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -31,17 +31,18 @@
 
         <TextView android:id="@+id/btnSetBackup" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Custom Apps" android:drawableStart="@drawable/ic_app_registration" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
 
-        <TextView android:id="@+id/btnSetDebug" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Debug Logs" android:drawableStart="@drawable/ic_terminal" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetBugs" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Report Bugs" android:drawableStart="@drawable/ic_bug" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetFeature" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Request Feature" android:drawableStart="@drawable/ic_flask" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetRepo" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="App Page" android:drawableStart="@drawable/ic_code" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetContact" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Contact Developer" android:drawableStart="@drawable/ic_email" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
+        
+        <TextView android:id="@+id/btnSetMore" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="More" android:drawableStart="@drawable/ic_more" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
 
         <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant" android:layout_marginTop="8dp" android:layout_marginBottom="8dp"/>
 
         <TextView android:id="@+id/btnSetPrivacy" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Privacy Policy" android:drawableStart="@drawable/ic_lock" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetLicense" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="App License (GPLv3)" android:drawableStart="@drawable/ic_info" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
-        
+
         <TextView android:id="@+id/btnSetCredits" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Open Source Licenses" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
 
         <TextView android:id="@+id/tvFooter" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:layout_marginTop="32dp" android:textColor="?attr/colorOnSurfaceVariant" android:textStyle="bold" android:textSize="16sp"/>

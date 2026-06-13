@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity() {
     findViewById<View>(R.id.cardUpdate).setOnClickListener { it.haptic(); lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, true) } }
     findViewById<View>(R.id.btnSetPerms).setOnClickListener { it.haptic(); startActivity(Intent(this, PermissionsActivity::class.java)) }
     btnCustomApps.setOnClickListener { it.haptic(); showCustomAppsDialog() }
-    findViewById<View>(R.id.btnSetDebug).setOnClickListener { it.haptic(); startActivity(Intent(this, DebugActivity::class.java)) }
+    findViewById<View>(R.id.btnSetMore).setOnClickListener { it.haptic(); startActivity(Intent(this, MoreActivity::class.java)) }
     findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip"))) }
     findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
     findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
@@ -208,7 +208,7 @@ class MainActivity : AppCompatActivity() {
           .start(this)
     }
 
-    lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) }
+    if (SettingsManager.isPrivacyAccepted) { lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       registerReceiver(statsReceiver, IntentFilter("me.jaival.sponsorskip.STATS_UPDATED"), Context.RECEIVER_NOT_EXPORTED)
@@ -220,7 +220,7 @@ class MainActivity : AppCompatActivity() {
   private fun showPrivacyDialog() {
     if (privacyDialog?.isShowing == true) return
     val message = "To keep things transparent and respect your privacy, here is exactly how the app works under the hood:\n\n1. Finding the Video: The app requires 'Notification Access' to securely read your device's active media player. This lets the app see the Title of the video you are watching. The app DOES NOT read your personal messages or other notifications.\n\n2. Getting the Video ID: Because the media player doesn't provide a direct link, the app searches the public YouTube website using the Title to grab the official 'Video ID'. However, no account data, logins, or cookies are sent.\n\n3. Skipping the segments: The app sends that Video ID to the community-run SponsorBlock API (sponsor.ajay.app) to get the skip timestamps.\n\n4. Local processing: The actual skipping happens entirely on your phone. The app never collects, store, share, or sell your viewing history.\n\nYou can know more from our Privacy Policy\n\nBy tapping 'Accept', you consent to our Privacy Policy."
-    privacyDialog = AlertDialog.Builder(this).setTitle("Welcome to Sponsor Skip!").setMessage(message).setCancelable(false).setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true }.setNegativeButton("Decline") { _, _ -> finishAffinity() }.setNeutralButton("Privacy Policy", null).create()
+    privacyDialog = AlertDialog.Builder(this).setTitle("Welcome to Sponsor Skip!").setMessage(message).setCancelable(false).setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true; lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }.setNegativeButton("Decline") { _, _ -> finishAffinity() }.setNeutralButton("Privacy Policy", null).create()
     privacyDialog?.setOnShowListener {
       privacyDialog?.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { view ->
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)

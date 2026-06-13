@@ -54,6 +54,7 @@ class DebugActivity : AppCompatActivity() {
             val finalLogs = if (switchRedact.isChecked) {
                 rawLogs
                     .replace(Regex("(?i)(title[:=]\\s*).+"), "$1[title]")
+                    .replace(Regex("(?i)(TITLE:\\s*).+"), "$1[title]")
                     .replace(Regex("(?i)(id[:=]\\s*)[a-zA-Z0-9_-]{11}"), "$1[id]")
                     .replace(Regex("v=[a-zA-Z0-9_-]{11}"), "v=[id]")
                     .replace(Regex("(?i)(Title: )'[^']*'"), "$1[title]")

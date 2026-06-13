@@ -48,6 +48,16 @@ class MediaNotificationService : NotificationListenerService() {
             if (title.isNotBlank() && title != currentTitle) {
                 currentTitle = title
                 AppLogger.log("[SERVICE] === METADATA DETECTED ===")
+                AppLogger.log("[SERVICE] --- RAW METADATA DUMP ---")
+                metadata?.keySet()?.forEach { key ->
+                    val value = try {
+                        metadata.getString(key) ?: metadata.getLong(key).toString()
+                    } catch (e: Exception) {
+                        "Binary/Object"
+                    }
+                    AppLogger.log("[SERVICE] $key: $value")
+                }
+                AppLogger.log("[SERVICE] ---------------------------")
                 
                 fetchJob?.cancel()
                 fetchJob = scope.launch {
