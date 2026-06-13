@@ -2,6 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="?attr/colorSurface">
     <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="wrap_content" app:title="More" app:navigationIcon="?attr/homeAsUpIndicator" app:navigationContentDescription="Navigate up"/>
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
+        
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pre-release updates" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Receive pre-release version updates. There may be bugs and not stable." android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchPreRelease" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
+
         <TextView android:id="@+id/btnSetMinDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Minimum segment duration" android:drawableStart="@drawable/ic_schedule" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetDebug" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Debug Logs" android:drawableStart="@drawable/ic_terminal" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
     </LinearLayout>

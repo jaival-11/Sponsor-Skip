@@ -1,7 +1,3 @@
-/*
- * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
- * Copyright (C) 2026 Jaival
- */
 package me.jaival.sponsorskip
 
 import android.app.NotificationChannel
@@ -20,18 +16,66 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONObject
+import org.json.JSONArray
 import java.io.File
 import java.io.FileOutputStream
 
 object UpdateManager {
     private val client = OkHttpClient()
 
+    private fun isNewerVersion(remote: String, local: String): Boolean {
+        // Strip any accidental 'v' prefixes and whitespace
+        val rClean = remote.removePrefix("v").trim()
+        val lClean = local.removePrefix("v").trim()
+
+        val rParts = rClean.split("-", limit = 2)
+        val lParts = lClean.split("-", limit = 2)
+
+        val rMain = rParts[0].split(".").map { it.toIntOrNull() ?: 0 }
+        val lMain = lParts[0].split(".").map { it.toIntOrNull() ?: 0 }
+
+        val length = maxOf(rMain.size, lMain.size)
+        for (i in 0 until length) {
+            val rVal = rMain.getOrElse(i) { 0 }
+            val lVal = lMain.getOrElse(i) { 0 }
+            if (rVal > lVal) return true
+            if (rVal < lVal) return false
+        }
+
+        val rHasPre = rParts.size > 1
+        val lHasPre = lParts.size > 1
+
+        if (!rHasPre && lHasPre) return true // Stable beats Pre-release
+        if (rHasPre && !lHasPre) return false // Pre-release loses to Stable
+
+        if (rHasPre && lHasPre) {
+            // Safe, numerical comparison for dev tags (fixes dev.10 < dev.2 bug)
+            val rPre = rParts[1].split(".")
+            val lPre = lParts[1].split(".")
+            val pLen = maxOf(rPre.size, lPre.size)
+            for (i in 0 until pLen) {
+                val rp = rPre.getOrElse(i) { "" }
+                val lp = lPre.getOrElse(i) { "" }
+                if (rp == lp) continue
+                
+                val rInt = rp.toIntOrNull()
+                val lInt = lp.toIntOrNull()
+                if (rInt != null && lInt != null) return rInt > lInt
+                return rp > lp
+            }
+        }
+        return false
+    }
+
     suspend fun checkUpdate(context: Context, manual: Boolean) {
         try {
-            val currentVersion = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
-            
-            val req = Request.Builder().url("https://codeberg.org/api/v1/repos/jaival/Sponsor-Skip/releases/latest").build()
+            val currentVersionRaw = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
+            val currentVersion = currentVersionRaw.removePrefix("v").trim()
+            val includePreRelease = SettingsManager.getPreReleaseSetting(context)
+
+            AppLogger.log("[UPDATER] Local App Version: '$currentVersion' | Pre-release Allowed: $includePreRelease")
+
+            val req = Request.Builder().url("https://codeberg.org/api/v1/repos/jaival/Sponsor-Skip/releases").build()
             val res = withContext(Dispatchers.IO) { client.newCall(req).execute() }
 
             if (!res.isSuccessful) {
@@ -39,20 +83,55 @@ object UpdateManager {
                 return
             }
 
-            val json = JSONObject(res.body?.string() ?: "")
-            val tag = json.optString("tag_name", "").replace("v", "")
+            val jsonString = res.body?.string() ?: "[]"
+            val jsonArray = JSONArray(jsonString)
+            
+            var latestTag = ""
+            var latestUrl = ""
 
-            if (tag.isNotBlank() && tag != currentVersion) {
-                val apkUrl = json.optJSONArray("assets")?.optJSONObject(0)?.optString("browser_download_url")
-                if (apkUrl != null) {
-                    withContext(Dispatchers.Main) {
-                        showUpdateDialog(context, tag, apkUrl, currentVersion)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val isPre = obj.optBoolean("prerelease", false)
+                val branch = obj.optString("target_commitish", "")
+                val tagName = obj.optString("tag_name", "")
+                
+                val isPreReleaseEntity = isPre || branch == "dev" || tagName.contains("dev")
+
+                if (!includePreRelease && isPreReleaseEntity) continue
+
+                val tag = tagName.removePrefix("v").trim()
+                if (tag.isNotBlank()) {
+                    if (latestTag.isEmpty() || isNewerVersion(tag, latestTag)) {
+                        latestTag = tag
+                        val assets = obj.optJSONArray("assets")
+                        if (assets != null && assets.length() > 0) {
+                            latestUrl = assets.optJSONObject(0)?.optString("browser_download_url") ?: ""
+                        } else {
+                            latestUrl = "" // Reset URL if the newer tag has no assets
+                        }
                     }
+                }
+            }
+
+            AppLogger.log("[UPDATER] Evaluated Latest Remote Tag: '$latestTag'")
+            
+            val isNewer = if (latestTag.isNotBlank()) isNewerVersion(latestTag, currentVersion) else false
+            AppLogger.log("[UPDATER] Is Remote ('$latestTag') mathematically newer than Local ('$currentVersion')? $isNewer")
+
+            if (latestTag.isNotBlank() && isNewer) {
+                if (latestUrl.isNotBlank()) {
+                    withContext(Dispatchers.Main) {
+                        showUpdateDialog(context, latestTag, latestUrl, currentVersion)
+                    }
+                } else {
+                    AppLogger.log("[UPDATER] ABORT: Newer release found, but it has no APK file attached on Codeberg.")
+                    if (manual) withContext(Dispatchers.Main) { Toast.makeText(context, "Release found but no APK attached.", Toast.LENGTH_SHORT).show() }
                 }
             } else {
                 if (manual) withContext(Dispatchers.Main) { Toast.makeText(context, "You are on the latest version!", Toast.LENGTH_SHORT).show() }
             }
         } catch (e: Exception) {
+            AppLogger.log("[UPDATER] FATAL ERROR: ${e.message}")
             if (manual) withContext(Dispatchers.Main) { Toast.makeText(context, "Error checking update.", Toast.LENGTH_SHORT).show() }
         }
     }
@@ -106,7 +185,7 @@ object UpdateManager {
                 val totalBytes = body.contentLength()
                 val inputStream = body.byteStream()
                 val outputStream = FileOutputStream(file)
-                
+
                 val buffer = ByteArray(8 * 1024)
                 var bytesCopied = 0L
                 var bytes = inputStream.read(buffer)
@@ -115,7 +194,7 @@ object UpdateManager {
                 while (bytes >= 0) {
                     outputStream.write(buffer, 0, bytes)
                     bytesCopied += bytes
-                    
+
                     if (totalBytes > 0) {
                         val progress = (bytesCopied * 100 / totalBytes).toInt()
                         val currentTime = System.currentTimeMillis()

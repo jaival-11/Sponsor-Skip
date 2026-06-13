@@ -1,19 +1,6 @@
 /*
  * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
  * Copyright (C) 2026 Jaival
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package me.jaival.sponsorskip
 
@@ -37,7 +24,6 @@ object SettingsManager {
         } else {
             context
         }
-
         prefs = targetContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
@@ -72,4 +58,16 @@ object SettingsManager {
     var minSegmentDuration: Float
         get() = prefs.getFloat("min_segment_duration", 0f)
         set(value) { prefs.edit().putFloat("min_segment_duration", value).commit() }
+
+    fun getPreReleaseSetting(context: Context): Boolean {
+        if (prefs.contains("pre_release_updates")) {
+            return prefs.getBoolean("pre_release_updates", false)
+        }
+        val vName = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch(e:Exception){""}
+        return vName?.contains("dev") == true
+    }
+
+    fun setPreReleaseSetting(value: Boolean) {
+        prefs.edit().putBoolean("pre_release_updates", value).commit()
+    }
 }

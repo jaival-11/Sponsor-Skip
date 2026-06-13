@@ -4,12 +4,20 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.materialswitch.MaterialSwitch
 
 class MoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_more)
         findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+
+        val switchPreRelease = findViewById<MaterialSwitch>(R.id.switchPreRelease)
+        switchPreRelease.isChecked = SettingsManager.getPreReleaseSetting(this)
+
+        switchPreRelease.setOnCheckedChangeListener { _, isChecked ->
+            SettingsManager.setPreReleaseSetting(isChecked)
+        }
 
         findViewById<View>(R.id.btnSetMinDuration).setOnClickListener {
             it.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
