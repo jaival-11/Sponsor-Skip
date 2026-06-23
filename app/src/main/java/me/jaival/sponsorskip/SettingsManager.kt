@@ -17,8 +17,10 @@ object SettingsManager {
 
     private const val PREFS_NAME = "skipper_prefs"
     private lateinit var prefs: SharedPreferences
+    private lateinit var appContext: Context
 
     fun init(context: Context) {
+        appContext = context.applicationContext
         val targetContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val deviceContext = context.createDeviceProtectedStorageContext()
             deviceContext.moveSharedPreferencesFrom(context, PREFS_NAME)
@@ -33,7 +35,17 @@ object SettingsManager {
 
     var isServiceEnabled: Boolean
         get() = prefs.getBoolean("service_master_switch", true)
-        set(value) { prefs.edit().putBoolean("service_master_switch", value).commit() }
+        set(value) {
+            prefs.edit().putBoolean("service_master_switch", value).commit()
+            if (::appContext.isInitialized && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                try {
+                    android.service.quicksettings.TileService.requestListeningState(
+                        appContext,
+                        android.content.ComponentName(appContext, SponsorTileService::class.java)
+                    )
+                } catch (e: Exception) {}
+            }
+        }
 
     var isLoggingEnabled: Boolean
         get() = prefs.getBoolean("logging_enabled", false)
