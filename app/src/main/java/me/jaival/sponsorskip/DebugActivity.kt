@@ -59,6 +59,8 @@ class DebugActivity : AppCompatActivity() {
                     .replace(Regex("v=[a-zA-Z0-9_-]{11}"), "v=[id]")
                     .replace(Regex("(?i)(Title: )'[^']*'"), "$1[title]")
                     .replace(Regex("(?i)(started for )'[^']*'"), "$1[title]")
+                    .replace(Regex("(?i)(MEDIA_ID[:=]\\s*).+"), "$1[id]")
+                    .replace(Regex("(?i)(Extracted: )'[^']*'"), "$1'[id]'")
                     .replace(Regex("(?i)(Extracted Title: )'[^']*'"), "$1[title]")
             } else {
                 rawLogs

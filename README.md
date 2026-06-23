@@ -44,9 +44,7 @@
 
 <h2><a id="screenshots"></a>Screenshots</h2>
 
-<img src="https://codeberg.org/attachments/fb302b5b-caf4-4f79-b5c9-2e7a8a65e60f" alt="Home screen" width="30%" />
-<img src="https://codeberg.org/attachments/77c77205-8a3a-46f1-b5ba-db43b505829e" alt="Settings Screen" width="30%" />
-<img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
+<img src="https://codeberg.org/attachments/fb302b5b-caf4-4f79-b5c9-2e7a8a65e60f" alt="Home screen" width="30%" /> <img src="https://codeberg.org/attachments/77c77205-8a3a-46f1-b5ba-db43b505829e" alt="Settings Screen" width="30%" /> <img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
 
 ---
 

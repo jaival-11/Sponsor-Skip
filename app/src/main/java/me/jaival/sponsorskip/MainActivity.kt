@@ -142,7 +142,7 @@ class MainActivity : AppCompatActivity() {
     
     findViewById<View>(R.id.cardUpdate).setOnClickListener { it.haptic(); lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, true) } }
     findViewById<View>(R.id.btnSetPerms).setOnClickListener { it.haptic(); startActivity(Intent(this, PermissionsActivity::class.java)) }
-    btnCustomApps.setOnClickListener { it.haptic(); showCustomAppsDialog() }
+    btnCustomApps.setOnClickListener { it.haptic(); AppSelectionDialog.show(this@MainActivity) }
     findViewById<View>(R.id.btnSetMore).setOnClickListener { it.haptic(); startActivity(Intent(this, MoreActivity::class.java)) }
     findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip"))) }
     findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }

@@ -13,6 +13,16 @@
 
         <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Spot SponsorBlock" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SponsorBlock for Spotify" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
+            </LinearLayout>
+            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchSpot" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
+
         <TextView android:id="@+id/btnSetMinDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Minimum segment duration" android:drawableStart="@drawable/ic_schedule" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         <TextView android:id="@+id/btnSetDebug" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Debug Logs" android:drawableStart="@drawable/ic_terminal" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
     </LinearLayout>

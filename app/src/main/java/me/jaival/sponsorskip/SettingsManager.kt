@@ -9,6 +9,8 @@ import android.content.SharedPreferences
 import android.os.Build
 
 object SettingsManager {
+    const val SPOTIFY_PACKAGE = "com.spotify.music"
+
     var targetPackages: Set<String>
         get() = prefs.getStringSet("targetPackages", setOf("com.google.android.youtube")) ?: setOf("com.google.android.youtube")
         set(value) = prefs.edit().putStringSet("targetPackages", value).apply()
@@ -21,9 +23,7 @@ object SettingsManager {
             val deviceContext = context.createDeviceProtectedStorageContext()
             deviceContext.moveSharedPreferencesFrom(context, PREFS_NAME)
             deviceContext
-        } else {
-            context
-        }
+        } else { context }
         prefs = targetContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
@@ -39,13 +39,8 @@ object SettingsManager {
         get() = prefs.getBoolean("logging_enabled", false)
         set(value) { prefs.edit().putBoolean("logging_enabled", value).commit() }
 
-    fun getSegmentAction(category: String): Int {
-        return prefs.getInt("cat_$category", if (category == "sponsor") 1 else 0)
-    }
-
-    fun setSegmentAction(category: String, action: Int) {
-        prefs.edit().putInt("cat_$category", action).commit()
-    }
+    fun getSegmentAction(category: String): Int = prefs.getInt("cat_$category", if (category == "sponsor") 1 else 0)
+    fun setSegmentAction(category: String, action: Int) { prefs.edit().putInt("cat_$category", action).commit() }
 
     var skippedCount: Int
         get() = prefs.getInt("stat_count", 0)
@@ -60,14 +55,13 @@ object SettingsManager {
         set(value) { prefs.edit().putFloat("min_segment_duration", value).commit() }
 
     fun getPreReleaseSetting(context: Context): Boolean {
-        if (prefs.contains("pre_release_updates")) {
-            return prefs.getBoolean("pre_release_updates", false)
-        }
+        if (prefs.contains("pre_release_updates")) return prefs.getBoolean("pre_release_updates", false)
         val vName = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch(e:Exception){""}
         return vName?.contains("dev") == true
     }
+    fun setPreReleaseSetting(value: Boolean) { prefs.edit().putBoolean("pre_release_updates", value).commit() }
 
-    fun setPreReleaseSetting(value: Boolean) {
-        prefs.edit().putBoolean("pre_release_updates", value).commit()
-    }
+    var isSpotEnabled: Boolean
+        get() = prefs.getBoolean("spot_master_switch", false) // Default OFF per instructions
+        set(value) { prefs.edit().putBoolean("spot_master_switch", value).commit() }
 }
