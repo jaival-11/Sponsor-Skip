@@ -96,7 +96,7 @@ You can download the latest compiled APK directly from the following sources:
     </td>    
     <td align="center">
       <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://codeberg.org/jaival/Sponsor-Skip">
-        <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/refs/heads/main/assets/graphics/badge_obtainium.png" alt="Download from Obtainium" height="50">
+        <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/refs/heads/main/assets/graphics/badge_obtainium.png" alt="Download from Obtainium" height="70">
       </a>
     </td>
   </tr>

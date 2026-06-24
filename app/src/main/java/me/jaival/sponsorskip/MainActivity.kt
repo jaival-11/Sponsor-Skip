@@ -55,12 +55,31 @@ class MainActivity : AppCompatActivity() {
     override fun onReceive(context: Context?, intent: Intent?) { refreshStats() }
   }
   
+  private val liveStateReceiver = object : android.content.BroadcastReceiver() {
+    override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+      if (intent?.action == "me.jaival.sponsorskip.TOGGLE_SERVICE") {
+        val isEnabled = SettingsManager.isServiceEnabled
+        val masterSwitch = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchMaster)
+        if (masterSwitch?.isChecked != isEnabled) {
+          masterSwitch?.isChecked = isEnabled
+        }
+        updateGreyOutState(isEnabled)
+      }
+    }
+  }
+
   private var privacyDialog: AlertDialog? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     SettingsManager.init(this)
     AppLogger.init(this)
+    val toggleFilter = android.content.IntentFilter("me.jaival.sponsorskip.TOGGLE_SERVICE")
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      registerReceiver(liveStateReceiver, toggleFilter, android.content.Context.RECEIVER_NOT_EXPORTED)
+    } else {
+      registerReceiver(liveStateReceiver, toggleFilter)
+    }
     AppLogger.log("[UI] MainActivity onCreate triggered.")
     setContentView(R.layout.activity_main)
     
@@ -384,6 +403,7 @@ class MainActivity : AppCompatActivity() {
 
   override fun onDestroy() {
     unregisterReceiver(statsReceiver)
+    unregisterReceiver(liveStateReceiver)
     privacyDialog?.dismiss()
     super.onDestroy()
   }

@@ -2,10 +2,15 @@ package me.jaival.sponsorskip
 
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import android.widget.Toast
 
 class SponsorTileService : TileService() {
+    private val mainHandler = Handler(Looper.getMainLooper())
+
     override fun onStartListening() {
         super.onStartListening()
         SettingsManager.init(this)
@@ -17,6 +22,15 @@ class SponsorTileService : TileService() {
         val nextState = !SettingsManager.isServiceEnabled
         SettingsManager.isServiceEnabled = nextState
         sendBroadcast(Intent("me.jaival.sponsorskip.TOGGLE_SERVICE"))
+        
+        mainHandler.post {
+            Toast.makeText(
+                applicationContext,
+                if (nextState) "Sponsor Skip: ON" else "Sponsor Skip: OFF",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        
         updateTile()
     }
 

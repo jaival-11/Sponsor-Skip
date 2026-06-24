@@ -30,7 +30,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode 9
-        versionName "1.2.0-dev.2"
+        versionName "v1.2.0-dev.2"
     }
     buildFeatures {
         viewBinding true
