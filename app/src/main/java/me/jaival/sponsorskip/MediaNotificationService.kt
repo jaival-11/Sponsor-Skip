@@ -160,15 +160,23 @@ class MediaNotificationService : NotificationListenerService() {
             if (isSpotMode) {
                 targetVideoId = targetInput
             } else {
-                val query = URLEncoder.encode(targetInput, "UTF-8")
+                val useStrict = SettingsManager.isStrictSearchEnabled
+                val scrapeMethod = if (useStrict) "strict intitle search" else "standard search"
+                val rawQuery = if (useStrict) "intitle:\"$targetInput\"" else targetInput
+
+                val query = URLEncoder.encode(rawQuery, "UTF-8")
                 val searchReq = Request.Builder().url("https://www.youtube.com/results?search_query=$query").header("User-Agent", "Mozilla/5.0").build()
-                val searchRes = client.newCall(searchReq).execute()
-                val html = searchRes.body?.string() ?: ""
+                val html = client.newCall(searchReq).execute().body?.string() ?: ""
                 val match = Regex("""/watch\?v=([a-zA-Z0-9_-]{11})""").find(html)
 
-                if (match == null) { if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID"); return }
+                if (match == null) {
+                    AppLogger.log("[SCRAPER] FATAL: Failed to locate Video ID using method: $scrapeMethod.")
+                    if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID")
+                    return
+                }
+                
                 targetVideoId = match.groupValues[1]
-                AppLogger.log("[SCRAPER] Extracted YouTube ID: $targetVideoId")
+                AppLogger.log("[SCRAPER] Extracted ID: '$targetVideoId' | Method: [$scrapeMethod]")
             }
 
             val serviceParam = if (isSpotMode) "&service=spotify" else ""

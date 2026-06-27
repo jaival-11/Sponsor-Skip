@@ -13,7 +13,14 @@ class MoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_more)
-        findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() }
+        val switchStrict = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchStrictSearch)
+        switchStrict?.isChecked = SettingsManager.isStrictSearchEnabled
+        switchStrict?.setOnCheckedChangeListener { _, isChecked ->
+            SettingsManager.isStrictSearchEnabled = isChecked
+        }
+        findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).setNavigationOnClickListener { finish() 
+
+}
 
         fun View.haptic() = this.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 

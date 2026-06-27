@@ -9,6 +9,11 @@ import android.content.SharedPreferences
 import android.os.Build
 
 object SettingsManager {
+    var isStrictSearchEnabled: Boolean
+        get() = prefs.getBoolean("strict_search_enabled", false)
+        set(value) = prefs.edit().putBoolean("strict_search_enabled", value).apply()
+
+
     const val SPOTIFY_PACKAGE = "com.spotify.music"
 
     var targetPackages: Set<String>
