@@ -24,7 +24,6 @@ object UpdateManager {
     private val client = OkHttpClient()
 
     private fun isNewerVersion(remote: String, local: String): Boolean {
-        // Strip any accidental 'v' prefixes and whitespace
         val rClean = remote.removePrefix("v").trim()
         val lClean = local.removePrefix("v").trim()
 
@@ -45,11 +44,10 @@ object UpdateManager {
         val rHasPre = rParts.size > 1
         val lHasPre = lParts.size > 1
 
-        if (!rHasPre && lHasPre) return true // Stable beats Pre-release
-        if (rHasPre && !lHasPre) return false // Pre-release loses to Stable
+        if (!rHasPre && lHasPre) return true 
+        if (rHasPre && !lHasPre) return false 
 
         if (rHasPre && lHasPre) {
-            // Safe, numerical comparison for dev tags (fixes dev.10 < dev.2 bug)
             val rPre = rParts[1].split(".")
             val lPre = lParts[1].split(".")
             val pLen = maxOf(rPre.size, lPre.size)
@@ -107,7 +105,7 @@ object UpdateManager {
                         if (assets != null && assets.length() > 0) {
                             latestUrl = assets.optJSONObject(0)?.optString("browser_download_url") ?: ""
                         } else {
-                            latestUrl = "" // Reset URL if the newer tag has no assets
+                            latestUrl = "" 
                         }
                     }
                 }
@@ -120,11 +118,9 @@ object UpdateManager {
 
             if (latestTag.isNotBlank() && isNewer) {
                 if (latestUrl.isNotBlank()) {
-                    withContext(Dispatchers.Main) {
-                        showUpdateDialog(context, latestTag, latestUrl, currentVersion)
-                    }
+                    withContext(Dispatchers.Main) { showUpdateDialog(context, latestTag, latestUrl, currentVersion) }
                 } else {
-                    AppLogger.log("[UPDATER] ABORT: Newer release found, but it has no APK file attached on Codeberg.")
+                    AppLogger.log("[UPDATER] ABORT: Newer release found, but it has no APK file attached.")
                     if (manual) withContext(Dispatchers.Main) { Toast.makeText(context, "Release found but no APK attached.", Toast.LENGTH_SHORT).show() }
                 }
             } else {
@@ -145,7 +141,16 @@ object UpdateManager {
                 Toast.makeText(context, "Downloading v$tag, check notification for progress", Toast.LENGTH_LONG).show()
                 CoroutineScope(Dispatchers.IO).launch { downloadAndInstall(context, apkUrl, tag) }
             }
-            .setNegativeButton("Later", null)
+            .setNegativeButton("Later") { _, _ ->
+                // Dismiss Guard: Instantly wipe any old downloaded APK files to free up storage
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        context.getExternalFilesDir(null)?.listFiles()?.forEach { 
+                            if (it.name.endsWith(".apk")) it.delete() 
+                        }
+                    } catch (e: Exception) {}
+                }
+            }
             .setNeutralButton("Changelog", null)
             .create()
 

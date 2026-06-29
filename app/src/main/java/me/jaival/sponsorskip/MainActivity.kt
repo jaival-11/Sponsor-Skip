@@ -74,6 +74,13 @@ class MainActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     SettingsManager.init(this)
     AppLogger.init(this)
+    
+    // Auto-clean any residual APK downloads eating up user Data storage
+    try {
+      getExternalFilesDir(null)?.listFiles()?.forEach { file ->
+        if (file.name.endsWith(".apk")) file.delete()
+      }
+    } catch (e: Exception) {}
     val toggleFilter = android.content.IntentFilter("me.jaival.sponsorskip.TOGGLE_SERVICE")
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
       registerReceiver(liveStateReceiver, toggleFilter, android.content.Context.RECEIVER_NOT_EXPORTED)
