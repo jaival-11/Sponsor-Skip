@@ -23,6 +23,13 @@ import android.content.SharedPreferences
 import android.os.Build
 
 object SettingsManager {
+    var isForegroundEnabled: Boolean
+        get() = prefs.getBoolean("foreground_service_enabled", false)
+        set(value) { 
+            prefs.edit().putBoolean("foreground_service_enabled", value).commit()
+            syncForegroundService()
+        }
+
     var isStrictSearchEnabled: Boolean
         get() = prefs.getBoolean("strict_search_enabled", false)
         set(value) = prefs.edit().putBoolean("strict_search_enabled", value).apply()
@@ -38,6 +45,17 @@ object SettingsManager {
     private lateinit var prefs: SharedPreferences
     private lateinit var appContext: Context
 
+    fun syncForegroundService() {
+        if (::appContext.isInitialized) {
+            val intent = android.content.Intent(appContext, SkipperForegroundService::class.java)
+            if (isForegroundEnabled && isServiceEnabled) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) appContext.startForegroundService(intent) else appContext.startService(intent)
+            } else {
+                appContext.stopService(intent)
+            }
+        }
+    }
+
     fun init(context: Context) {
         appContext = context.applicationContext
         val targetContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -46,6 +64,7 @@ object SettingsManager {
             deviceContext
         } else { context }
         prefs = targetContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        syncForegroundService()
     }
 
     var isPrivacyAccepted: Boolean
@@ -56,6 +75,7 @@ object SettingsManager {
         get() = prefs.getBoolean("service_master_switch", true)
         set(value) {
             prefs.edit().putBoolean("service_master_switch", value).commit()
+            syncForegroundService()
             if (::appContext.isInitialized && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 try {
                     android.service.quicksettings.TileService.requestListeningState(

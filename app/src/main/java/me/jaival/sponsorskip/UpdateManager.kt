@@ -13,7 +13,8 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package me.jaival.sponsorskip
 
@@ -127,9 +128,9 @@ object UpdateManager {
                     }
                 }
             }
-
-            AppLogger.log("[UPDATER] Evaluated Latest Remote Tag: '$latestTag'")
             
+            AppLogger.log("[UPDATER] Evaluated Latest Remote Tag: '$latestTag'")
+
             val isNewer = if (latestTag.isNotBlank()) isNewerVersion(latestTag, currentVersion) else false
             AppLogger.log("[UPDATER] Is Remote ('$latestTag') mathematically newer than Local ('$currentVersion')? $isNewer")
 
@@ -159,7 +160,6 @@ object UpdateManager {
                 CoroutineScope(Dispatchers.IO).launch { downloadAndInstall(context, apkUrl, tag) }
             }
             .setNegativeButton("Later") { _, _ ->
-                // Dismiss Guard: Instantly wipe any old downloaded APK files to free up storage
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         context.getExternalFilesDir(null)?.listFiles()?.forEach { 

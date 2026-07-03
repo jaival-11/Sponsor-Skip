@@ -56,6 +56,19 @@ class MoreActivity : AppCompatActivity() {
             }
         }
 
+        val switchFg = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchForeground)
+        switchFg?.isChecked = SettingsManager.isForegroundEnabled
+        switchFg?.setOnClickListener { view ->
+            val isChecked = switchFg.isChecked
+            if (isChecked && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                switchFg.isChecked = false
+                // Skip the custom dialog and directly ask for system permission
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 102)
+                return@setOnClickListener
+            }
+            SettingsManager.isForegroundEnabled = isChecked
+        }
+
         findViewById<View>(R.id.btnSetMinDuration).setOnClickListener {
             it.haptic()
             val input = android.widget.EditText(this).apply {
