@@ -234,12 +234,39 @@ class MainActivity : AppCompatActivity() {
           .start(this)
     }
 
+    checkPendingUpdateIntent(intent)
     if (SettingsManager.isPrivacyAccepted) { lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       registerReceiver(statsReceiver, IntentFilter("me.jaival.sponsorskip.STATS_UPDATED"), Context.RECEIVER_NOT_EXPORTED)
     } else {
       registerReceiver(statsReceiver, IntentFilter("me.jaival.sponsorskip.STATS_UPDATED"))
+    }
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    checkPendingUpdateIntent(intent)
+  }
+
+  private fun checkPendingUpdateIntent(targetIntent: Intent?) {
+    val showFromNotif = targetIntent?.getBooleanExtra("EXTRA_SHOW_UPDATE", false) == true
+    var tag = targetIntent?.getStringExtra("EXTRA_UPDATE_TAG") ?: ""
+    var url = targetIntent?.getStringExtra("EXTRA_UPDATE_URL") ?: ""
+    
+    if (tag.isBlank() || url.isBlank()) {
+      tag = SettingsManager.pendingUpdateTag
+      url = SettingsManager.pendingUpdateUrl
+    }
+    
+    if (showFromNotif && tag.isNotBlank() && url.isNotBlank()) {
+      targetIntent?.removeExtra("EXTRA_SHOW_UPDATE")
+      val currentVersionRaw = try {
+        packageManager.getPackageInfo(packageName, 0).versionName ?: "Unknown"
+      } catch (e: Exception) { "Unknown" }
+      val currentVersion = currentVersionRaw.removePrefix("v").trim()
+      UpdateManager.showUpdateDialog(this, tag, url, currentVersion)
     }
   }
 

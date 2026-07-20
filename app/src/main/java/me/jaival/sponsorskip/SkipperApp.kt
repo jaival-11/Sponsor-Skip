@@ -26,5 +26,8 @@ class SkipperApp : Application() {
         super.onCreate()
         // This single line enables Monet dynamic theming across the whole app
         DynamicColors.applyToActivitiesIfAvailable(this)
+        SettingsManager.init(this)
+        AppLogger.init(this)
+        UpdateCheckWorker.schedule(this)
     }
 }

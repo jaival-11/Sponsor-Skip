@@ -128,6 +128,18 @@ object SettingsManager {
     }
     fun setPreReleaseSetting(value: Boolean) { prefs.edit().putBoolean("pre_release_updates", value).commit() }
 
+    var lastCheckTime: Long
+        get() = prefs.getLong("last_update_check_time", 0L)
+        set(value) { prefs.edit().putLong("last_update_check_time", value).apply() }
+
+    var pendingUpdateTag: String
+        get() = prefs.getString("pending_update_tag", "") ?: ""
+        set(value) { prefs.edit().putString("pending_update_tag", value).apply() }
+
+    var pendingUpdateUrl: String
+        get() = prefs.getString("pending_update_url", "") ?: ""
+        set(value) { prefs.edit().putString("pending_update_url", value).apply() }
+
     var isSpotEnabled: Boolean
         get() = prefs.getBoolean("spot_master_switch", false) // Default OFF per instructions
         set(value) { prefs.edit().putBoolean("spot_master_switch", value).commit() }

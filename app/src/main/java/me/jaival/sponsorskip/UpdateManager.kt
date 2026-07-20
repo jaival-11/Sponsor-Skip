@@ -84,6 +84,15 @@ object UpdateManager {
     }
 
     suspend fun checkUpdate(context: Context, manual: Boolean) {
+        if (!manual) {
+            val lastCheck = SettingsManager.lastCheckTime
+            val now = System.currentTimeMillis()
+            if (now - lastCheck < 4 * 60 * 60 * 1000L) {
+                AppLogger.log("[UPDATER] Skipped app-open check: checked within last 4 hours (${(now - lastCheck) / 1000 / 60} mins ago).")
+                return
+            }
+        }
+
         try {
             val currentVersionRaw = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
             val currentVersion = currentVersionRaw.removePrefix("v").trim()
@@ -95,9 +104,12 @@ object UpdateManager {
             val res = withContext(Dispatchers.IO) { client.newCall(req).execute() }
 
             if (!res.isSuccessful) {
+                AppLogger.log("[UPDATER] HTTP check failed: ${res.code}")
                 if (manual) withContext(Dispatchers.Main) { Toast.makeText(context, "Repo not found or no releases yet.", Toast.LENGTH_SHORT).show() }
                 return
             }
+
+            SettingsManager.lastCheckTime = System.currentTimeMillis()
 
             val jsonString = res.body?.string() ?: "[]"
             val jsonArray = JSONArray(jsonString)
@@ -136,6 +148,8 @@ object UpdateManager {
 
             if (latestTag.isNotBlank() && isNewer) {
                 if (latestUrl.isNotBlank()) {
+                    SettingsManager.pendingUpdateTag = latestTag
+                    SettingsManager.pendingUpdateUrl = latestUrl
                     withContext(Dispatchers.Main) { showUpdateDialog(context, latestTag, latestUrl, currentVersion) }
                 } else {
                     AppLogger.log("[UPDATER] ABORT: Newer release found, but it has no APK file attached.")
@@ -150,16 +164,126 @@ object UpdateManager {
         }
     }
 
-    private fun showUpdateDialog(context: Context, tag: String, apkUrl: String, currentVersion: String) {
+    suspend fun checkUpdateBackground(context: Context): Boolean {
+        try {
+            val currentVersionRaw = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
+            val currentVersion = currentVersionRaw.removePrefix("v").trim()
+            val includePreRelease = SettingsManager.getPreReleaseSetting(context)
+
+            AppLogger.log("[UPDATER] 24h Background Check - Local App Version: '$currentVersion'")
+
+            val req = Request.Builder().url("https://codeberg.org/api/v1/repos/jaival/Sponsor-Skip/releases").build()
+            val res = withContext(Dispatchers.IO) { client.newCall(req).execute() }
+
+            if (!res.isSuccessful) {
+                AppLogger.log("[UPDATER] 24h Background Check failed: HTTP ${res.code}")
+                return false
+            }
+
+            SettingsManager.lastCheckTime = System.currentTimeMillis()
+
+            val jsonString = res.body?.string() ?: "[]"
+            val jsonArray = JSONArray(jsonString)
+            
+            var latestTag = ""
+            var latestUrl = ""
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                val isPre = obj.optBoolean("prerelease", false)
+                val branch = obj.optString("target_commitish", "")
+                val tagName = obj.optString("tag_name", "")
+                
+                val isPreReleaseEntity = isPre || branch == "dev" || tagName.contains("dev")
+
+                if (!includePreRelease && isPreReleaseEntity) continue
+
+                val tag = tagName.removePrefix("v").trim()
+                if (tag.isNotBlank()) {
+                    if (latestTag.isEmpty() || isNewerVersion(tag, latestTag)) {
+                        latestTag = tag
+                        val assets = obj.optJSONArray("assets")
+                        if (assets != null && assets.length() > 0) {
+                            latestUrl = assets.optJSONObject(0)?.optString("browser_download_url") ?: ""
+                        } else {
+                            latestUrl = "" 
+                        }
+                    }
+                }
+            }
+
+            val isNewer = if (latestTag.isNotBlank()) isNewerVersion(latestTag, currentVersion) else false
+            AppLogger.log("[UPDATER] 24h Background Check - Latest Tag: '$latestTag', Is Newer: $isNewer")
+
+            if (latestTag.isNotBlank() && isNewer && latestUrl.isNotBlank()) {
+                SettingsManager.pendingUpdateTag = latestTag
+                SettingsManager.pendingUpdateUrl = latestUrl
+                postUpdateNotification(context, latestTag, latestUrl)
+            }
+
+            return true
+        } catch (e: Exception) {
+            AppLogger.log("[UPDATER] 24h Background Check error: ${e.message}")
+            return false
+        }
+    }
+
+    fun postUpdateNotification(context: Context, tag: String, apkUrl: String) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "update_channel"
+        val notifId = 1002
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "App Updates", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("EXTRA_SHOW_UPDATE", true)
+            putExtra("EXTRA_UPDATE_TAG", tag)
+            putExtra("EXTRA_UPDATE_URL", apkUrl)
+        }
+
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notificationText = "Update to version $tag is available, update now"
+        val builder = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("Update available")
+            .setContentText(notificationText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+
+        try {
+            notificationManager.notify(notifId, builder.build())
+            AppLogger.log("[UPDATER] Posted notification for update: version $tag")
+        } catch (e: Exception) {
+            AppLogger.log("[UPDATER] Failed to post update notification: ${e.message}")
+        }
+    }
+
+    fun showUpdateDialog(context: Context, tag: String, apkUrl: String, currentVersion: String) {
         val dialog = AlertDialog.Builder(context)
             .setTitle("New version available")
             .setMessage("Current app version is v$currentVersion. An update to v$tag is available. Open changelog to see changes")
             .setCancelable(false)
             .setPositiveButton("Download") { _, _ ->
+                SettingsManager.pendingUpdateTag = ""
+                SettingsManager.pendingUpdateUrl = ""
                 Toast.makeText(context, "Downloading v$tag, check notification for progress", Toast.LENGTH_LONG).show()
                 CoroutineScope(Dispatchers.IO).launch { downloadAndInstall(context, apkUrl, tag) }
             }
             .setNegativeButton("Later") { _, _ ->
+                SettingsManager.pendingUpdateTag = ""
+                SettingsManager.pendingUpdateUrl = ""
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         context.getExternalFilesDir(null)?.listFiles()?.forEach { 
