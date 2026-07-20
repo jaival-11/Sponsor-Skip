@@ -48,20 +48,41 @@ class UpdateCheckWorker(
         private const val WORK_NAME = "periodic_update_check"
 
         fun schedule(context: Context) {
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
+            try {
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
 
-            val workRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(24, TimeUnit.HOURS)
-                .setConstraints(constraints)
-                .build()
+                val workRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(24, TimeUnit.HOURS)
+                    .setConstraints(constraints)
+                    .build()
 
-            WorkManager.getInstance(context.applicationContext).enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
-                workRequest
-            )
-            AppLogger.log("[UPDATER] Scheduled 24h periodic update check with WorkManager.")
+                WorkManager.getInstance(context.applicationContext).enqueueUniquePeriodicWork(
+                    WORK_NAME,
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    workRequest
+                )
+                AppLogger.log("[UPDATER] Scheduled 24h periodic update check with WorkManager.")
+            } catch (e: Exception) {
+                AppLogger.log("[UPDATER] Failed to schedule periodic WorkManager job: ${e.message}")
+            }
+        }
+
+        fun runNow(context: Context) {
+            try {
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+
+                val workRequest = androidx.work.OneTimeWorkRequestBuilder<UpdateCheckWorker>()
+                    .setConstraints(constraints)
+                    .build()
+
+                WorkManager.getInstance(context.applicationContext).enqueue(workRequest)
+                AppLogger.log("[UPDATER] Enqueued immediate one-time background update check worker.")
+            } catch (e: Exception) {
+                AppLogger.log("[UPDATER] Failed to enqueue immediate worker: ${e.message}")
+            }
         }
     }
 }

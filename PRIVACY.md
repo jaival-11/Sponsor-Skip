@@ -29,7 +29,7 @@ Once the App determines the 11-character Video ID, it requests the skip timestam
 * **Privacy Impact:** The SponsorBlock API does not receive your YouTube account information, but it may see the Video ID and your device's IP address. This data is handled in accordance with the [SponsorBlock Privacy Policy](https://gist.github.com/ajayyy/aa9f8ded2b573d4f73a3ffa0ef74f796). This request is made directly from your device to SponsorBlock servers. The request is not routed through, and is never processed or stored on, any servers or infrastructure owned, operated or controlled by the Developer. 
 
 ### D. App Update Checks (Codeberg)
-To ensure you are running the latest version, the App checks for updates when opened or when manually requested in the settings.
+To ensure you are running the latest version, the App may check for updates periodically in background or on app open or when manually requested in the settings.
 * **The Process:** The App makes a network request to the public Codeberg API to check the repository's latest release tag.
 * **Privacy Impact:** No personal data or usage metrics are sent. However, your device's IP address may be exposed to Codeberg's servers during the request. This is governed by [Codeberg's Privacy Policy](https://codeberg.org/Codeberg/org/src/branch/main/PrivacyPolicy.md). This request is made directly from your device to Codeberg's servers. The request is not routed through, and is never processed or stored on, any servers or infrastructure owned, operated or controlled by the Developer.
 
