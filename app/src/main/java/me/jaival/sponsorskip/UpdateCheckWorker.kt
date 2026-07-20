@@ -34,6 +34,11 @@ class UpdateCheckWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
+        if (!SettingsManager.isAutoUpdateCheckEnabled) {
+            AppLogger.log("[UPDATER] Periodic 24h update check worker invoked but auto update check is disabled. Cancelling worker.")
+            cancel(appContext)
+            return Result.success()
+        }
         AppLogger.log("[UPDATER] Periodic 24h update check worker started.")
         val success = UpdateManager.checkUpdateBackground(appContext)
         return if (success) {
@@ -47,7 +52,20 @@ class UpdateCheckWorker(
     companion object {
         private const val WORK_NAME = "periodic_update_check"
 
+        fun cancel(context: Context) {
+            try {
+                WorkManager.getInstance(context.applicationContext).cancelUniqueWork(WORK_NAME)
+                AppLogger.log("[UPDATER] Cancelled 24h periodic update check in WorkManager.")
+            } catch (e: Exception) {
+                AppLogger.log("[UPDATER] Failed to cancel periodic WorkManager job: ${e.message}")
+            }
+        }
+
         fun schedule(context: Context) {
+            if (!SettingsManager.isAutoUpdateCheckEnabled) {
+                cancel(context)
+                return
+            }
             try {
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -69,7 +87,9 @@ class UpdateCheckWorker(
         }
 
         fun runNow(context: Context) {
+            if (!SettingsManager.isAutoUpdateCheckEnabled) return
             try {
+
                 val constraints = Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build()

@@ -1,121 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="?attr/colorSurface">
     <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="wrap_content" app:title="More" app:navigationIcon="?attr/homeAsUpIndicator" app:navigationContentDescription="Navigate up"/>
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
-        
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
-            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pre-release updates" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Receive pre-release version updates. There may be bugs and not stable." android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
+    <androidx.core.widget.NestedScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
+            
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Pre-release updates" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Receive pre-release version updates. There may be bugs and not stable." android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchPreRelease" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
             </LinearLayout>
-            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchPreRelease" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        </LinearLayout>
 
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
-        
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Strict search"
-                android:textSize="16sp"
-                android:textColor="?android:attr/textColorPrimary" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Use strict search to ensure more accurate results. It may break for videos with certain titles"
-                android:textSize="14sp"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchStrictSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
-            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Spot SponsorBlock" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SponsorBlock for Spotify" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Strict search"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Use strict search to ensure more accurate results. It may break for videos with certain titles"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchStrictSearch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
-            <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchSpot" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Spot SponsorBlock" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SponsorBlock for Spotify" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchSpot" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Foreground service"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Run a foreground service if you are currently facing problems (may consume more battery)"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchForeground"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Enable Skip Count tracking"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sends skip counts to contribute to the SponsorBlock leaderboard to track how much time is saved. Only segment UUID is sent, no personal information like account info, etc is sent."
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchSkipCountTracking"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Check for Updates"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Auto check for app updates. It is recommended to keep it on"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchCheckForUpdates"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
+
+            <TextView android:id="@+id/btnSetMinDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Minimum segment duration" android:drawableStart="@drawable/ic_schedule" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
+            <TextView android:id="@+id/btnBackupRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Backup &amp; Restore" android:drawableStart="@drawable/ic_backup" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
+            <TextView android:id="@+id/btnSetDebug" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Debug Logs" android:drawableStart="@drawable/ic_terminal" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Foreground service"
-                android:textSize="16sp"
-                android:textColor="?android:attr/textColorPrimary" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Run a foreground service if you are currently facing problems (may consume more battery)"
-                android:textSize="14sp"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchForeground"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Enable Skip Count tracking"
-                android:textSize="16sp"
-                android:textColor="?android:attr/textColorPrimary" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Sends skip counts to contribute to the SponsorBlock leaderboard to track how much time is saved. Only segment UUID is sent, no personal information like account info, etc is sent."
-                android:textSize="14sp"
-                android:textColor="?android:attr/textColorSecondary" />
-        </LinearLayout>
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/switchSkipCountTracking"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
-
-        <TextView android:id="@+id/btnSetMinDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Minimum segment duration" android:drawableStart="@drawable/ic_schedule" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
-        <TextView android:id="@+id/btnBackupRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Backup &amp; Restore" android:drawableStart="@drawable/ic_backup" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
-        <TextView android:id="@+id/btnSetDebug" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Debug Logs" android:drawableStart="@drawable/ic_terminal" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
-    </LinearLayout>
-
-    
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

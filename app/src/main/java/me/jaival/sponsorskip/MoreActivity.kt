@@ -90,6 +90,7 @@ class MoreActivity : AppCompatActivity() {
         findViewById<MaterialSwitch>(R.id.switchPreRelease)?.isChecked = SettingsManager.getPreReleaseSetting(this)
         findViewById<MaterialSwitch>(R.id.switchSpot)?.isChecked = SettingsManager.isSpotEnabled
         findViewById<MaterialSwitch>(R.id.switchForeground)?.isChecked = SettingsManager.isForegroundEnabled
+        findViewById<MaterialSwitch>(R.id.switchCheckForUpdates)?.isChecked = SettingsManager.isAutoUpdateCheckEnabled
         findViewById<MaterialSwitch>(R.id.switchSkipCountTracking)?.isChecked = SettingsManager.isSkipCountTrackingEnabled
     }
 
@@ -150,6 +151,13 @@ class MoreActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             SettingsManager.isForegroundEnabled = isChecked
+        }
+
+        val switchCheckForUpdates = findViewById<MaterialSwitch>(R.id.switchCheckForUpdates)
+        switchCheckForUpdates?.isChecked = SettingsManager.isAutoUpdateCheckEnabled
+        switchCheckForUpdates?.setOnCheckedChangeListener { _, isChecked ->
+            AppLogger.log("[UI] Check for updates toggled: $isChecked")
+            SettingsManager.isAutoUpdateCheckEnabled = isChecked
         }
 
         val switchSkipCount = findViewById<MaterialSwitch>(R.id.switchSkipCountTracking)

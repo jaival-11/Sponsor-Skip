@@ -85,6 +85,10 @@ object UpdateManager {
 
     suspend fun checkUpdate(context: Context, manual: Boolean) {
         if (!manual) {
+            if (!SettingsManager.isAutoUpdateCheckEnabled) {
+                AppLogger.log("[UPDATER] Skipped app-open check: Auto check for updates is disabled in settings.")
+                return
+            }
             val lastCheck = SettingsManager.lastCheckTime
             val now = System.currentTimeMillis()
             if (now - lastCheck < 4 * 60 * 60 * 1000L) {
@@ -165,6 +169,10 @@ object UpdateManager {
     }
 
     suspend fun checkUpdateBackground(context: Context): Boolean {
+        if (!SettingsManager.isAutoUpdateCheckEnabled) {
+            AppLogger.log("[UPDATER] Skipped 24h background check: Auto check for updates is disabled in settings.")
+            return true
+        }
         try {
             val currentVersionRaw = context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "Unknown"
             val currentVersion = currentVersionRaw.removePrefix("v").trim()

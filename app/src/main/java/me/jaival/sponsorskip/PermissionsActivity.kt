@@ -42,7 +42,7 @@ class PermissionsActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             hasToasts = checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         }
-        permToast.text = "Post Notifications (Toasts)  " + (if (hasToasts) "✅" else "❌")
+        permToast.text = "Post Notifications  " + (if (hasToasts) "✅" else "❌")
         permToast.setOnClickListener {
             if (hasToasts) {
                 Toast.makeText(this, "Post notification permission already granted", Toast.LENGTH_SHORT).show()

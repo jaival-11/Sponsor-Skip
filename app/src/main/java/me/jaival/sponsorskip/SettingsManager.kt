@@ -38,6 +38,19 @@ object SettingsManager {
         get() = prefs.getBoolean("skip_count_tracking_enabled", false)
         set(value) { prefs.edit().putBoolean("skip_count_tracking_enabled", value).commit() }
 
+    var isAutoUpdateCheckEnabled: Boolean
+        get() = prefs.getBoolean("auto_update_check_enabled", true)
+        set(value) {
+            prefs.edit().putBoolean("auto_update_check_enabled", value).commit()
+            if (::appContext.isInitialized) {
+                if (value) {
+                    UpdateCheckWorker.schedule(appContext)
+                } else {
+                    UpdateCheckWorker.cancel(appContext)
+                }
+            }
+        }
+
 
     const val SPOTIFY_PACKAGE = "com.spotify.music"
 
