@@ -127,4 +127,72 @@ object SettingsManager {
     var isSpotEnabled: Boolean
         get() = prefs.getBoolean("spot_master_switch", false) // Default OFF per instructions
         set(value) { prefs.edit().putBoolean("spot_master_switch", value).commit() }
+
+    fun exportSettingsJson(): String {
+        val json = org.json.JSONObject()
+        val allPrefs = prefs.all
+        for ((key, value) in allPrefs) {
+            when (value) {
+                is Set<*> -> {
+                    val array = org.json.JSONArray()
+                    for (item in value) {
+                        array.put(item)
+                    }
+                    json.put(key, array)
+                }
+                else -> json.put(key, value)
+            }
+        }
+        AppLogger.log("[BACKUP] Exported ${allPrefs.size} preference keys")
+        return json.toString(4)
+    }
+
+    fun importSettingsJson(jsonStr: String): Boolean {
+        return try {
+            val json = org.json.JSONObject(jsonStr)
+            val editor = prefs.edit()
+            val keys = json.keys()
+            var count = 0
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val value = json.get(key)
+                when (value) {
+                    is Boolean -> editor.putBoolean(key, value)
+                    is String -> editor.putString(key, value)
+                    is org.json.JSONArray -> {
+                        val set = mutableSetOf<String>()
+                        for (i in 0 until value.length()) {
+                            set.add(value.getString(i))
+                        }
+                        editor.putStringSet(key, set)
+                    }
+                    is Number -> {
+                        if (key == "min_segment_duration") {
+                            editor.putFloat(key, value.toFloat())
+                        } else if (key == "stat_time") {
+                            editor.putLong(key, value.toLong())
+                        } else if (key == "stat_count" || key.startsWith("cat_")) {
+                            editor.putInt(key, value.toInt())
+                        } else {
+                            if (value is Double || value is Float) {
+                                editor.putFloat(key, value.toFloat())
+                            } else if (value is Long) {
+                                editor.putLong(key, value.toLong())
+                            } else {
+                                editor.putInt(key, value.toInt())
+                            }
+                        }
+                    }
+                }
+                count++
+            }
+            editor.commit()
+            syncForegroundService()
+            AppLogger.log("[BACKUP] Restored $count preference keys")
+            true
+        } catch (e: Exception) {
+            AppLogger.log("[BACKUP] Error importing settings: ${e.message}")
+            false
+        }
+    }
 }

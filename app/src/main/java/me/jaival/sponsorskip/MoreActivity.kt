@@ -28,6 +28,51 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.materialswitch.MaterialSwitch
 
 class MoreActivity : AppCompatActivity() {
+
+    private val exportBackupLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        if (uri != null) {
+            try {
+                contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    val jsonStr = SettingsManager.exportSettingsJson()
+                    outputStream.write(jsonStr.toByteArray(Charsets.UTF_8))
+                }
+                AppLogger.log("[BACKUP] Backup successfully created at $uri")
+                Toast.makeText(this, "Backup created successfully", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                AppLogger.log("[BACKUP] Export failed: ${e.message}")
+                Toast.makeText(this, "Failed to create backup: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private val importBackupLauncher = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            try {
+                val jsonStr = contentResolver.openInputStream(uri)?.use { inputStream ->
+                    inputStream.bufferedReader().use { it.readText() }
+                }
+                if (!jsonStr.isNullOrEmpty() && SettingsManager.importSettingsJson(jsonStr)) {
+                    AppLogger.log("[BACKUP] Backup successfully restored from $uri")
+                    Toast.makeText(this, "Backup restored successfully", Toast.LENGTH_SHORT).show()
+                    updateUiState()
+                } else {
+                    AppLogger.log("[BACKUP] Failed to restore: Invalid backup file")
+                    Toast.makeText(this, "Invalid backup file", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                AppLogger.log("[BACKUP] Import failed: ${e.message}")
+                Toast.makeText(this, "Failed to restore backup: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun updateUiState() {
+        findViewById<MaterialSwitch>(R.id.switchStrictSearch)?.isChecked = SettingsManager.isStrictSearchEnabled
+        findViewById<MaterialSwitch>(R.id.switchPreRelease)?.isChecked = SettingsManager.getPreReleaseSetting(this)
+        findViewById<MaterialSwitch>(R.id.switchSpot)?.isChecked = SettingsManager.isSpotEnabled
+        findViewById<MaterialSwitch>(R.id.switchForeground)?.isChecked = SettingsManager.isForegroundEnabled
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_more)
@@ -105,6 +150,20 @@ class MoreActivity : AppCompatActivity() {
                     Toast.makeText(this, "Minimum duration set to $value seconds", Toast.LENGTH_SHORT).show()
                 }
                 .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        findViewById<View>(R.id.btnBackupRestore).setOnClickListener {
+            it.haptic()
+            val options = arrayOf("Backup Settings", "Restore Settings")
+            AlertDialog.Builder(this)
+                .setTitle("Backup & Restore")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> exportBackupLauncher.launch("sponsorskip_backup.json")
+                        1 -> importBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                    }
+                }
                 .show()
         }
 

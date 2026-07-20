@@ -17,6 +17,7 @@ You are an expert Android and Kotlin developer assisting with the "Sponsor Skip"
 3. **Scraper Integrity:** The YouTube HTML scraping logic in `MediaNotificationService.kt` is highly sensitive. Do not alter the User-Agent, Regex patterns, or network request structure unless explicitly fixing a scraper bug. 
 4. **Service Synchronization:** Any changes to background/foreground services must route through `SettingsManager.kt` to ensure the UI toggles, the Master Switch, and the actual service state remain perfectly synchronized.
 5. **Modification Method:** Apply changes directly to files using your CLI capabilities. Do not output bash/termux injection scripts (`cat << 'EOF'`) unless explicitly asked to generate a shell script.
+6. **Comprehensive Logging:** The app features a user-facing Debug Log toggle. Whenever you add new features, network requests, background tasks, or complex logic, you MUST automatically include `AppLogger.log("[MODULE_PREFIX] Message")` statements. Use contextual prefixes (e.g., `[SCRAPER]`, `[SERVICE]`, `[UI]`, `[UPDATER]`) so users can accurately track the app's internal state when debugging is enabled.
 
 ## Core Header Template
 ```kotlin
