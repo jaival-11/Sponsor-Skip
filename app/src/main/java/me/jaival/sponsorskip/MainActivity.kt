@@ -258,6 +258,7 @@ class MainActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
+    wakeUpListenerService()
     findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchMaster)?.isChecked = SettingsManager.isServiceEnabled
     updateGreyOutState(SettingsManager.isServiceEnabled)
   }

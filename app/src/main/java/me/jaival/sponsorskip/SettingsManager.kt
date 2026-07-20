@@ -49,9 +49,21 @@ object SettingsManager {
         if (::appContext.isInitialized) {
             val intent = android.content.Intent(appContext, SkipperForegroundService::class.java)
             if (isForegroundEnabled && isServiceEnabled) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) appContext.startForegroundService(intent) else appContext.startService(intent)
+                try {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        appContext.startForegroundService(intent)
+                    } else {
+                        appContext.startService(intent)
+                    }
+                } catch (e: Exception) {
+                    AppLogger.log("[SERVICE] Failed to start foreground service: ${e.message}")
+                }
             } else {
-                appContext.stopService(intent)
+                try {
+                    appContext.stopService(intent)
+                } catch (e: Exception) {
+                    AppLogger.log("[SERVICE] Failed to stop foreground service: ${e.message}")
+                }
             }
         }
     }

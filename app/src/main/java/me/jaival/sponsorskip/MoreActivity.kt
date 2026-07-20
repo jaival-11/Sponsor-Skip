@@ -1,3 +1,21 @@
+/*
+ * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
+ * Copyright © 2026 Jaival
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package me.jaival.sponsorskip
 
 import android.content.Intent
@@ -91,5 +109,14 @@ class MoreActivity : AppCompatActivity() {
         }
 
         findViewById<View>(R.id.btnSetDebug).setOnClickListener { it.haptic(); startActivity(Intent(this, DebugActivity::class.java)) }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 102) {
+            val granted = grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED
+            SettingsManager.isForegroundEnabled = granted
+            findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchForeground)?.isChecked = granted
+        }
     }
 }

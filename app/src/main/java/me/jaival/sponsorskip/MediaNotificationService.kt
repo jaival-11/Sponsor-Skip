@@ -25,7 +25,7 @@ data class Segment(val startMs: Long, val endMs: Long, val category: String)
 
 class MediaNotificationService : NotificationListenerService() {
     private val client = OkHttpClient()
-    private val scope = CoroutineScope(Dispatchers.IO + Job())
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var skipSegments = mutableListOf<Segment>()
     private var ytController: MediaController? = null
     private var trackingJob: Job? = null
@@ -66,28 +66,34 @@ class MediaNotificationService : NotificationListenerService() {
 
                 fetchJob?.cancel()
                 fetchJob = scope.launch {
-                    if (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING) {
-                        AppLogger.log("$modePrefix Target is buffering/paused. Waiting for playback...")
-                        while (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING && isActive) { delay(400) }
+                    try {
+                        if (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING) {
+                            AppLogger.log("$modePrefix Target is buffering/paused. Waiting for playback...")
+                            while (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING && isActive) { delay(400) }
+                            if (!isActive) return@launch
+                            AppLogger.log("$modePrefix Playback started for '$targetIdentifier'.")
+                        }
+
+                        val freshMetadata = ytController?.metadata
+                        val actualDuration = freshMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: initialDuration
+
+                        if (!isSpotApp && actualDuration <= 181000L) {
+                            AppLogger.log("$modePrefix Short video suspect -> 1.5s debounce delay")
+                            delay(1500)
+                        }
+
                         if (!isActive) return@launch
-                        AppLogger.log("$modePrefix Playback started for '$targetIdentifier'.")
-                    }
 
-                    val freshMetadata = ytController?.metadata
-                    val actualDuration = freshMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: initialDuration
-
-                    if (!isSpotApp && actualDuration <= 181000L) {
-                        AppLogger.log("$modePrefix Short video suspect -> 1.5s debounce delay")
-                        delay(1500)
-                    }
-
-                    if (!isActive) return@launch
-
-                    if (isSpotApp) {
-                        AppLogger.log("$modePrefix Direct Metadata ID Extracted: '$targetIdentifier' (Bypassing HTML Search)")
-                        fetchSegmentsAndTrack(targetIdentifier, true)
-                    } else {
-                        fetchSegmentsAndTrack(title, false)
+                        if (isSpotApp) {
+                            AppLogger.log("$modePrefix Direct Metadata ID Extracted: '$targetIdentifier' (Bypassing HTML Search)")
+                            fetchSegmentsAndTrack(targetIdentifier, true)
+                        } else {
+                            fetchSegmentsAndTrack(title, false)
+                        }
+                    } catch (e: Exception) {
+                        if (e !is CancellationException) {
+                            AppLogger.log("[SERVICE] fetchJob error: ${e.message}")
+                        }
                     }
                 }
             }
@@ -243,22 +249,32 @@ class MediaNotificationService : NotificationListenerService() {
         trackingJob?.cancel()
         trackingJob = scope.launch(Dispatchers.Main) {
             while (isActive) {
-                val state = ytController?.playbackState
-                if (state?.state == PlaybackState.STATE_PLAYING) {
-                    val pos = state.position
-                    val hit = skipSegments.find { pos in it.startMs..it.endMs }
+                try {
+                    val state = ytController?.playbackState
+                    if (state?.state == PlaybackState.STATE_PLAYING) {
+                        val pos = state.position
+                        val hit = skipSegments.find { pos in it.startMs..it.endMs }
 
-                    if (hit != null) {
-                        AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hit.category.uppercase()} at $pos ms")
-                        ytController?.transportControls?.seekTo(hit.endMs)
+                        if (hit != null) {
+                            AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hit.category.uppercase()} at $pos ms")
+                            try {
+                                ytController?.transportControls?.seekTo(hit.endMs)
+                            } catch (e: Exception) {
+                                AppLogger.log("[TRACKER] seekTo failed: ${e.message}")
+                            }
 
-                        SettingsManager.skippedCount += if (hit.category == "multiple") 2 else 1
-                        SettingsManager.timeSavedMs += (hit.endMs - hit.startMs)
-                        sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
+                            SettingsManager.skippedCount += if (hit.category == "multiple") 2 else 1
+                            SettingsManager.timeSavedMs += (hit.endMs - hit.startMs)
+                            sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
 
-                        showToast(if (hit.category == "multiple") "Skipped Multiple segments" else "Skipped: ${hit.category.uppercase()}")
-                        skipSegments.remove(hit)
-                        delay(2000)
+                            showToast(if (hit.category == "multiple") "Skipped Multiple segments" else "Skipped: ${hit.category.uppercase()}")
+                            skipSegments.remove(hit)
+                            delay(2000)
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (e !is CancellationException) {
+                        AppLogger.log("[TRACKER] Loop error: ${e.message}")
                     }
                 }
                 delay(1000)
@@ -267,5 +283,9 @@ class MediaNotificationService : NotificationListenerService() {
     }
 
     private fun showToast(msg: String) = mainHandler.post { Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show() }
-    override fun onDestroy() { unregisterReceiver(toggleReceiver); scope.cancel(); super.onDestroy() }
+    override fun onDestroy() {
+        try { unregisterReceiver(toggleReceiver) } catch (e: Exception) {}
+        scope.cancel()
+        super.onDestroy()
+    }
 }

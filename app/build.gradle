@@ -1,6 +1,6 @@
 /*
  * Sponsor Skip - Auto-skips SponsorBlock segments in YouTube videos
- * Copyright (C) 2026 Jaival
+ * Copyright © 2026 Jaival
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ android {
         applicationId "me.jaival.sponsorskip"
         minSdk 26
         targetSdk 34
-        versionCode 10
-        versionName "1.2.0-dev.3"
+        versionCode 11
+        versionName "1.2.0-dev.4"
     }
     buildFeatures {
         viewBinding true
