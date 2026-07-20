@@ -55,6 +55,7 @@ class MoreActivity : AppCompatActivity() {
                     AppLogger.log("[BACKUP] Backup successfully restored from $uri")
                     Toast.makeText(this, "Backup restored successfully", Toast.LENGTH_SHORT).show()
                     updateUiState()
+                    showRestartDialog()
                 } else {
                     AppLogger.log("[BACKUP] Failed to restore: Invalid backup file")
                     Toast.makeText(this, "Invalid backup file", Toast.LENGTH_SHORT).show()
@@ -64,6 +65,24 @@ class MoreActivity : AppCompatActivity() {
                 Toast.makeText(this, "Failed to restore backup: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showRestartDialog() {
+        AppLogger.log("[BACKUP] Prompting user to restart app after successful restoration")
+        AlertDialog.Builder(this)
+            .setTitle("Restart Required")
+            .setMessage("Settings and statistics have been restored. Please restart the app to apply all changes.")
+            .setCancelable(false)
+            .setPositiveButton("Restart") { _, _ ->
+                AppLogger.log("[BACKUP] User confirmed restart, restarting application")
+                val intent = packageManager.getLaunchIntentForPackage(packageName)
+                if (intent != null) {
+                    val restartIntent = Intent.makeRestartActivityTask(intent.component)
+                    startActivity(restartIntent)
+                }
+                Runtime.getRuntime().exit(0)
+            }
+            .show()
     }
 
     private fun updateUiState() {
@@ -155,7 +174,7 @@ class MoreActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.btnBackupRestore).setOnClickListener {
             it.haptic()
-            val options = arrayOf("Backup Settings", "Restore Settings")
+            val options = arrayOf("Backup Settings and Stastics", "Restore Settings and Stastics")
             AlertDialog.Builder(this)
                 .setTitle("Backup & Restore")
                 .setItems(options) { _, which ->

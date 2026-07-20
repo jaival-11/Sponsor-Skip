@@ -130,6 +130,10 @@ object SettingsManager {
 
     fun exportSettingsJson(): String {
         val json = org.json.JSONObject()
+        // Explicitly include statistics data (skippedCount & timeSavedMs)
+        json.put("stat_count", skippedCount)
+        json.put("stat_time", timeSavedMs)
+
         val allPrefs = prefs.all
         for ((key, value) in allPrefs) {
             when (value) {
@@ -143,7 +147,7 @@ object SettingsManager {
                 else -> json.put(key, value)
             }
         }
-        AppLogger.log("[BACKUP] Exported ${allPrefs.size} preference keys")
+        AppLogger.log("[BACKUP] Exported ${json.length()} keys including statistics (skippedCount: $skippedCount, timeSavedMs: $timeSavedMs)")
         return json.toString(4)
     }
 
@@ -188,10 +192,13 @@ object SettingsManager {
             }
             editor.commit()
             syncForegroundService()
-            AppLogger.log("[BACKUP] Restored $count preference keys")
+            if (::appContext.isInitialized) {
+                appContext.sendBroadcast(android.content.Intent("me.jaival.sponsorskip.STATS_UPDATED"))
+            }
+            AppLogger.log("[BACKUP] Restored $count keys including statistics (skippedCount: $skippedCount, timeSavedMs: $timeSavedMs)")
             true
         } catch (e: Exception) {
-            AppLogger.log("[BACKUP] Error importing settings: ${e.message}")
+            AppLogger.log("[BACKUP] Error importing settings and statistics: ${e.message}")
             false
         }
     }
