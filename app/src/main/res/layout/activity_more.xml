@@ -80,6 +80,36 @@
             android:layout_height="wrap_content" />
     </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Enable Skip Count tracking"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorPrimary" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sends skip counts to contribute to the SponsorBlock leaderboard to track how much time is saved. Only segment UUID is sent, no personal information like account info, etc is sent."
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorSecondary" />
+        </LinearLayout>
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/switchSkipCountTracking"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
         <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
         <TextView android:id="@+id/btnSetMinDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Minimum segment duration" android:drawableStart="@drawable/ic_schedule" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>

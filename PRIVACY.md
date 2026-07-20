@@ -25,6 +25,7 @@ Because the Android system does not provide the direct Video ID, the App must fi
 ### C. SponsorBlock API Request
 Once the App determines the 11-character Video ID, it requests the skip timestamps from the public SponsorBlock database.
 * **The Process:** The App sends the Video ID via a GET request to `sponsor.ajay.app`.
+* **Skip Count Tracking:** Additionally if a user enables `Skip count tracking` in the app, only UUID of skipped segment is sent via a POST request to `sponsor.ajay.app`.
 * **Privacy Impact:** The SponsorBlock API does not receive your YouTube account information, but it may see the Video ID and your device's IP address. This data is handled in accordance with the [SponsorBlock Privacy Policy](https://gist.github.com/ajayyy/aa9f8ded2b573d4f73a3ffa0ef74f796). This request is made directly from your device to SponsorBlock servers. The request is not routed through, and is never processed or stored on, any servers or infrastructure owned, operated or controlled by the Developer. 
 
 ### D. App Update Checks (Codeberg)
@@ -58,4 +59,4 @@ If you have any questions, concerns, or requests regarding this Privacy Policy o
 
 ---
 
-*The Privacy Policy was updated on 25th May, 2026*
+*The Privacy Policy was updated on 20th July, 2026*

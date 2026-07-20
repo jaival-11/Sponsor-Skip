@@ -34,6 +34,10 @@ object SettingsManager {
         get() = prefs.getBoolean("strict_search_enabled", false)
         set(value) = prefs.edit().putBoolean("strict_search_enabled", value).apply()
 
+    var isSkipCountTrackingEnabled: Boolean
+        get() = prefs.getBoolean("skip_count_tracking_enabled", false)
+        set(value) { prefs.edit().putBoolean("skip_count_tracking_enabled", value).commit() }
+
 
     const val SPOTIFY_PACKAGE = "com.spotify.music"
 

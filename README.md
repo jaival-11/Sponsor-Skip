@@ -205,7 +205,7 @@ This project stands on the shoulders of giants. A massive thank you to the devel
 ## Privacy Policy
 Read complete Privacy Policy (human-readable) at [Privacy Policy](PRIVACY.md).  
   
-*The [Privacy Policy](PRIVACY.md) was last updated on 25th May, 2026.*
+*The [Privacy Policy](PRIVACY.md) was last updated on 20th July, 2026.*
 
 ---
 

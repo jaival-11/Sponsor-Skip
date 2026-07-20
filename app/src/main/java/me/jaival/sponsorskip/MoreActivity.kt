@@ -90,6 +90,7 @@ class MoreActivity : AppCompatActivity() {
         findViewById<MaterialSwitch>(R.id.switchPreRelease)?.isChecked = SettingsManager.getPreReleaseSetting(this)
         findViewById<MaterialSwitch>(R.id.switchSpot)?.isChecked = SettingsManager.isSpotEnabled
         findViewById<MaterialSwitch>(R.id.switchForeground)?.isChecked = SettingsManager.isForegroundEnabled
+        findViewById<MaterialSwitch>(R.id.switchSkipCountTracking)?.isChecked = SettingsManager.isSkipCountTrackingEnabled
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,6 +150,13 @@ class MoreActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
             SettingsManager.isForegroundEnabled = isChecked
+        }
+
+        val switchSkipCount = findViewById<MaterialSwitch>(R.id.switchSkipCountTracking)
+        switchSkipCount?.isChecked = SettingsManager.isSkipCountTrackingEnabled
+        switchSkipCount?.setOnCheckedChangeListener { _, isChecked ->
+            AppLogger.log("[UI] Skip count tracking toggled: $isChecked")
+            SettingsManager.isSkipCountTrackingEnabled = isChecked
         }
 
         findViewById<View>(R.id.btnSetMinDuration).setOnClickListener {

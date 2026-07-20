@@ -21,7 +21,7 @@ import org.json.JSONArray
 import java.net.URLEncoder
 import kotlin.math.max
 
-data class Segment(val startMs: Long, val endMs: Long, val category: String)
+data class Segment(val startMs: Long, val endMs: Long, val category: String, val uuids: List<String> = emptyList())
 
 class MediaNotificationService : NotificationListenerService() {
     private val client = OkHttpClient()
@@ -204,6 +204,7 @@ class MediaNotificationService : NotificationListenerService() {
                 val obj = sponsorJson.getJSONObject(i)
                 val segment = obj.getJSONArray("segment")
                 val category = obj.getString("category")
+                val uuid = obj.optString("UUID", obj.optString("uuid", ""))
                 val action = SettingsManager.getSegmentAction(category)
                 val actionStr = if (action == 1) "Skip" else "Off"
 
@@ -214,7 +215,8 @@ class MediaNotificationService : NotificationListenerService() {
                         AppLogger.log("[PARSE] Evaluated [$category] = $actionStr (BLOCKED: ${String.format("%.2f", durationSec)}s < ${minDur}s min)")
                     } else {
                         AppLogger.log("[PARSE] Evaluated [$category] = $actionStr")
-                        armedSegments.add(Segment((segment.getDouble(0) * 1000).toLong(), (segment.getDouble(1) * 1000).toLong(), category))
+                        val uuids = if (uuid.isNotBlank()) listOf(uuid) else emptyList()
+                        armedSegments.add(Segment((segment.getDouble(0) * 1000).toLong(), (segment.getDouble(1) * 1000).toLong(), category, uuids))
                     }
                 } else { AppLogger.log("[PARSE] Evaluated [$category] = $actionStr") }
             }
@@ -228,7 +230,7 @@ class MediaNotificationService : NotificationListenerService() {
                     val next = sorted[i]
                     if (current.endMs >= next.startMs - 1000) {
                         AppLogger.log("[TRACKER] Fusing adjacent segments into multiple block.")
-                        current = Segment(current.startMs, max(current.endMs, next.endMs), "multiple")
+                        current = Segment(current.startMs, max(current.endMs, next.endMs), "multiple", current.uuids + next.uuids)
                     } else { skipSegments.add(current); current = next }
                 }
                 skipSegments.add(current)
@@ -242,6 +244,22 @@ class MediaNotificationService : NotificationListenerService() {
         } catch (e: Exception) {
             AppLogger.log("[FATAL] Trace: ${e.message}")
             if (SettingsManager.isLoggingEnabled) showToast("Error fetching segments")
+        }
+    }
+
+    private fun sendSkipCount(uuid: String) {
+        try {
+            AppLogger.log("[API] Sending skip count for segment UUID: $uuid")
+            val url = "https://sponsor.ajay.app/api/viewedVideoSponsorTime?UUID=$uuid"
+            val req = Request.Builder()
+                .url(url)
+                .post(okhttp3.FormBody.Builder().build())
+                .build()
+            val resp = client.newCall(req).execute()
+            AppLogger.log("[API] Skip count response code for $uuid: ${resp.code}")
+            resp.close()
+        } catch (e: Exception) {
+            AppLogger.log("[API] Failed to send skip count for $uuid: ${e.message}")
         }
     }
 
@@ -266,6 +284,15 @@ class MediaNotificationService : NotificationListenerService() {
                             SettingsManager.skippedCount += if (hit.category == "multiple") 2 else 1
                             SettingsManager.timeSavedMs += (hit.endMs - hit.startMs)
                             sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
+
+                            if (SettingsManager.isSkipCountTrackingEnabled && hit.uuids.isNotEmpty()) {
+                                val uuidsToSend = hit.uuids.toList()
+                                scope.launch(Dispatchers.IO) {
+                                    for (uuid in uuidsToSend) {
+                                        sendSkipCount(uuid)
+                                    }
+                                }
+                            }
 
                             showToast(if (hit.category == "multiple") "Skipped Multiple segments" else "Skipped: ${hit.category.uppercase()}")
                             skipSegments.remove(hit)
