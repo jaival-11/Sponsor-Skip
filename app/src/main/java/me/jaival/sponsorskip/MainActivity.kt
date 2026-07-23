@@ -55,12 +55,38 @@ class MainActivity : AppCompatActivity() {
     override fun onReceive(context: Context?, intent: Intent?) { refreshStats() }
   }
   
+  private val liveStateReceiver = object : android.content.BroadcastReceiver() {
+    override fun onReceive(context: android.content.Context?, intent: android.content.Intent?) {
+      if (intent?.action == "me.jaival.sponsorskip.TOGGLE_SERVICE") {
+        val isEnabled = SettingsManager.isServiceEnabled
+        val masterSwitch = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchMaster)
+        if (masterSwitch?.isChecked != isEnabled) {
+          masterSwitch?.isChecked = isEnabled
+        }
+        updateGreyOutState(isEnabled)
+      }
+    }
+  }
+
   private var privacyDialog: AlertDialog? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     SettingsManager.init(this)
     AppLogger.init(this)
+    
+    // Auto-clean any residual APK downloads eating up user Data storage
+    try {
+      getExternalFilesDir(null)?.listFiles()?.forEach { file ->
+        if (file.name.endsWith(".apk")) file.delete()
+      }
+    } catch (e: Exception) {}
+    val toggleFilter = android.content.IntentFilter("me.jaival.sponsorskip.TOGGLE_SERVICE")
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+      registerReceiver(liveStateReceiver, toggleFilter, android.content.Context.RECEIVER_NOT_EXPORTED)
+    } else {
+      registerReceiver(liveStateReceiver, toggleFilter)
+    }
     AppLogger.log("[UI] MainActivity onCreate triggered.")
     setContentView(R.layout.activity_main)
     
@@ -142,13 +168,13 @@ class MainActivity : AppCompatActivity() {
     
     findViewById<View>(R.id.cardUpdate).setOnClickListener { it.haptic(); lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, true) } }
     findViewById<View>(R.id.btnSetPerms).setOnClickListener { it.haptic(); startActivity(Intent(this, PermissionsActivity::class.java)) }
-    btnCustomApps.setOnClickListener { it.haptic(); showCustomAppsDialog() }
-    findViewById<View>(R.id.btnSetDebug).setOnClickListener { it.haptic(); startActivity(Intent(this, DebugActivity::class.java)) }
-    findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip"))) }
-    findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
-    findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
+    btnCustomApps.setOnClickListener { it.haptic(); AppSelectionDialog.show(this@MainActivity) }
+    findViewById<View>(R.id.btnSetMore).setOnClickListener { it.haptic(); startActivity(Intent(this, MoreActivity::class.java)) }
+    findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip"))) }
+    findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip#bug-reports--feature-suggestions"))) }
+    findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip#bug-reports--feature-suggestions"))) }
     findViewById<View>(R.id.btnSetContact).setOnClickListener { it.haptic(); val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { "Unknown" }; val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:jaival7909@gmail.com?subject=" + Uri.encode("Sponsor Skip - v$version")) }; startActivity(Intent.createChooser(intent, "Send Email")) }
-    findViewById<View>(R.id.btnSetPrivacy).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md"))) }
+    findViewById<View>(R.id.btnSetPrivacy).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip/blob/main/PRIVACY.md"))) }
     findViewById<View>(R.id.btnSetLicense).setOnClickListener { it.haptic(); AlertDialog.Builder(this).setTitle("License & Warranty").setMessage("Sponsor Skip: Auto-skips SponsorBlock segments in YouTube videos\nCopyright © 2026 Jaival\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.").setPositiveButton("View Full GPLv3") { _, _ -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gnu.org/licenses/gpl-3.0.html"))) }.setNegativeButton("Close", null).show() }
     findViewById<View>(R.id.btnSetCredits).setOnClickListener { view ->
       view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
@@ -208,7 +234,8 @@ class MainActivity : AppCompatActivity() {
           .start(this)
     }
 
-    lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) }
+    checkPendingUpdateIntent(intent)
+    if (SettingsManager.isPrivacyAccepted) { lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
       registerReceiver(statsReceiver, IntentFilter("me.jaival.sponsorskip.STATS_UPDATED"), Context.RECEIVER_NOT_EXPORTED)
@@ -217,14 +244,40 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    checkPendingUpdateIntent(intent)
+  }
+
+  private fun checkPendingUpdateIntent(targetIntent: Intent?) {
+    val showFromNotif = targetIntent?.getBooleanExtra("EXTRA_SHOW_UPDATE", false) == true
+    var tag = targetIntent?.getStringExtra("EXTRA_UPDATE_TAG") ?: ""
+    var url = targetIntent?.getStringExtra("EXTRA_UPDATE_URL") ?: ""
+    
+    if (tag.isBlank() || url.isBlank()) {
+      tag = SettingsManager.pendingUpdateTag
+      url = SettingsManager.pendingUpdateUrl
+    }
+    
+    if (showFromNotif && tag.isNotBlank() && url.isNotBlank()) {
+      targetIntent?.removeExtra("EXTRA_SHOW_UPDATE")
+      val currentVersionRaw = try {
+        packageManager.getPackageInfo(packageName, 0).versionName ?: "Unknown"
+      } catch (e: Exception) { "Unknown" }
+      val currentVersion = currentVersionRaw.removePrefix("v").trim()
+      UpdateManager.showUpdateDialog(this, tag, url, currentVersion)
+    }
+  }
+
   private fun showPrivacyDialog() {
     if (privacyDialog?.isShowing == true) return
     val message = "To keep things transparent and respect your privacy, here is exactly how the app works under the hood:\n\n1. Finding the Video: The app requires 'Notification Access' to securely read your device's active media player. This lets the app see the Title of the video you are watching. The app DOES NOT read your personal messages or other notifications.\n\n2. Getting the Video ID: Because the media player doesn't provide a direct link, the app searches the public YouTube website using the Title to grab the official 'Video ID'. However, no account data, logins, or cookies are sent.\n\n3. Skipping the segments: The app sends that Video ID to the community-run SponsorBlock API (sponsor.ajay.app) to get the skip timestamps.\n\n4. Local processing: The actual skipping happens entirely on your phone. The app never collects, store, share, or sell your viewing history.\n\nYou can know more from our Privacy Policy\n\nBy tapping 'Accept', you consent to our Privacy Policy."
-    privacyDialog = AlertDialog.Builder(this).setTitle("Welcome to Sponsor Skip!").setMessage(message).setCancelable(false).setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true }.setNegativeButton("Decline") { _, _ -> finishAffinity() }.setNeutralButton("Privacy Policy", null).create()
+    privacyDialog = AlertDialog.Builder(this).setTitle("Welcome to Sponsor Skip!").setMessage(message).setCancelable(false).setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true; lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }.setNegativeButton("Decline") { _, _ -> finishAffinity() }.setNeutralButton("Privacy Policy", null).create()
     privacyDialog?.setOnShowListener {
       privacyDialog?.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { view ->
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md")))
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip/blob/main/PRIVACY.md")))
       }
     }
     privacyDialog?.show()
@@ -232,6 +285,8 @@ class MainActivity : AppCompatActivity() {
 
   override fun onResume() {
     super.onResume()
+    wakeUpListenerService()
+    findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchMaster)?.isChecked = SettingsManager.isServiceEnabled
     updateGreyOutState(SettingsManager.isServiceEnabled)
   }
 
@@ -372,7 +427,7 @@ class MainActivity : AppCompatActivity() {
     val clickableSpan = object : ClickableSpan() {
       override fun onClick(widget: View) {
         widget.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival")))
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11")))
       }
     }
     val start = text.indexOf("Jaival")
@@ -383,6 +438,7 @@ class MainActivity : AppCompatActivity() {
 
   override fun onDestroy() {
     unregisterReceiver(statsReceiver)
+    unregisterReceiver(liveStateReceiver)
     privacyDialog?.dismiss()
     super.onDestroy()
   }

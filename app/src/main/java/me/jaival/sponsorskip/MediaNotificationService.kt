@@ -21,62 +21,79 @@ import org.json.JSONArray
 import java.net.URLEncoder
 import kotlin.math.max
 
-data class Segment(val startMs: Long, val endMs: Long, val category: String)
+data class Segment(val startMs: Long, val endMs: Long, val category: String, val uuids: List<String> = emptyList())
 
 class MediaNotificationService : NotificationListenerService() {
     private val client = OkHttpClient()
-    private val scope = CoroutineScope(Dispatchers.IO + Job())
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var skipSegments = mutableListOf<Segment>()
     private var ytController: MediaController? = null
     private var trackingJob: Job? = null
     private var fetchJob: Job? = null
     private var sessionManager: MediaSessionManager? = null
-    private var currentTitle = ""
+    private var currentTitleOrId = ""
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    private val sessionListener = MediaSessionManager.OnActiveSessionsChangedListener { sessions ->
-        handleSessions(sessions)
-    }
+    private val sessionListener = MediaSessionManager.OnActiveSessionsChangedListener { sessions -> handleSessions(sessions) }
 
     private val callback = object : MediaController.Callback() {
         override fun onMetadataChanged(metadata: MediaMetadata?) {
-            if (!SettingsManager.isServiceEnabled) return
-            val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
-                ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE) ?: ""
+            val currentPkg = ytController?.packageName ?: ""
+            val isSpotApp = (currentPkg == SettingsManager.SPOTIFY_PACKAGE) && SettingsManager.isSpotEnabled
+            val isYtApp = SettingsManager.targetPackages.contains(currentPkg) && SettingsManager.isServiceEnabled
+
+            if (!isSpotApp && !isYtApp) return
+
+            val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE) ?: ""
             val initialDuration = metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
 
-            if (title.isNotBlank() && title != currentTitle) {
-                currentTitle = title
-                AppLogger.log("[SERVICE] === METADATA DETECTED ===")
+            val targetIdentifier = if (isSpotApp) {
+                val rawMediaId = metadata?.getString(MediaMetadata.METADATA_KEY_MEDIA_ID) ?: ""
+                if (rawMediaId.contains(":")) rawMediaId.substringAfterLast(":") else rawMediaId
+            } else { title }
+
+            if (targetIdentifier.isNotBlank() && targetIdentifier != currentTitleOrId) {
+                currentTitleOrId = targetIdentifier
+                val modePrefix = if (isSpotApp) "[SPOT SERVICE]" else "[SERVICE]"
                 
+                AppLogger.log("$modePrefix === METADATA DETECTED ($currentPkg) ===")
+                AppLogger.log("$modePrefix --- RAW METADATA DUMP ---")
+                metadata?.keySet()?.forEach { key ->
+                    val value = try { metadata.getString(key) ?: metadata.getLong(key).toString() } catch (e: Exception) { "Binary/Object" }
+                    AppLogger.log("$modePrefix $key: $value")
+                }
+                AppLogger.log("$modePrefix ---------------------------")
+
                 fetchJob?.cancel()
                 fetchJob = scope.launch {
-                    if (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING) {
-                        AppLogger.log("[SERVICE] Title: '$title' is buffering or paused. Waiting for playback to begin...")
-                        while (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING && isActive) {
-                            delay(400)
+                    try {
+                        if (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING) {
+                            AppLogger.log("$modePrefix Target is buffering/paused. Waiting for playback...")
+                            while (ytController?.playbackState?.state != PlaybackState.STATE_PLAYING && isActive) { delay(400) }
+                            if (!isActive) return@launch
+                            AppLogger.log("$modePrefix Playback started for '$targetIdentifier'.")
                         }
-                        if (!isActive) {
-                            AppLogger.log("[SERVICE] Fetch aborted: User skipped before video loaded.")
-                            return@launch
-                        }
-                        AppLogger.log("[SERVICE] Playback fully started for '$title'.")
-                    }
-                    
-                    val freshMetadata = ytController?.metadata
-                    val actualDuration = freshMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: initialDuration
 
-                    if (actualDuration <= 181000L) {
-                        AppLogger.log("[SERVICE] Title: '$title' | Duration: ${actualDuration}ms. (Shorts/Scroll suspect -> Adding 1.5s debounce delay)")
-                        delay(1500)
-                    } else {
-                        AppLogger.log("[SERVICE] Title: '$title' | Duration: ${actualDuration}ms. (Long-form video -> Bypassing delay)")
-                    }
-                    
-                    if (isActive) {
-                        fetchSegmentsAndTrack(title)
-                    } else {
-                        AppLogger.log("[SERVICE] Fetch aborted: User scrolled away before debounce timer finished.")
+                        val freshMetadata = ytController?.metadata
+                        val actualDuration = freshMetadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: initialDuration
+
+                        if (!isSpotApp && actualDuration <= 181000L) {
+                            AppLogger.log("$modePrefix Short video suspect -> 1.5s debounce delay")
+                            delay(1500)
+                        }
+
+                        if (!isActive) return@launch
+
+                        if (isSpotApp) {
+                            AppLogger.log("$modePrefix Direct Metadata ID Extracted: '$targetIdentifier' (Bypassing HTML Search)")
+                            fetchSegmentsAndTrack(targetIdentifier, true)
+                        } else {
+                            fetchSegmentsAndTrack(title, false)
+                        }
+                    } catch (e: Exception) {
+                        if (e !is CancellationException) {
+                            AppLogger.log("[SERVICE] fetchJob error: ${e.message}")
+                        }
                     }
                 }
             }
@@ -86,16 +103,11 @@ class MediaNotificationService : NotificationListenerService() {
     private val toggleReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "me.jaival.sponsorskip.TOGGLE_SERVICE") {
-                if (!SettingsManager.isServiceEnabled) {
-                    AppLogger.log("[SERVICE] KILL SIGNAL RECEIVED. Wiping memory and unregistering hooks.")
-                    trackingJob?.cancel()
-                    fetchJob?.cancel()
-                    ytController?.unregisterCallback(callback)
-                    ytController = null
-                    currentTitle = ""
-                    skipSegments.clear()
+                if (!SettingsManager.isServiceEnabled && !SettingsManager.isSpotEnabled) {
+                    AppLogger.log("[SERVICE] MASTER KILL SIGNAL. Wiping memory and detaching hooks.")
+                    trackingJob?.cancel(); fetchJob?.cancel(); ytController?.unregisterCallback(callback); ytController = null; currentTitleOrId = ""; skipSegments.clear()
                 } else {
-                    AppLogger.log("[SERVICE] REVIVE SIGNAL RECEIVED. Re-attaching hooks to Android System.")
+                    AppLogger.log("[SERVICE] CONFIG CHANGED. Re-evaluating active hooks.")
                     val component = ComponentName(this@MediaNotificationService, MediaNotificationService::class.java)
                     handleSessions(sessionManager?.getActiveSessions(component))
                 }
@@ -105,14 +117,9 @@ class MediaNotificationService : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
-        SettingsManager.init(this)
-        AppLogger.init(this)
+        SettingsManager.init(this); AppLogger.init(this)
         val filter = IntentFilter("me.jaival.sponsorskip.TOGGLE_SERVICE")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(toggleReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(toggleReceiver, filter)
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) registerReceiver(toggleReceiver, filter, Context.RECEIVER_NOT_EXPORTED) else registerReceiver(toggleReceiver, filter)
     }
 
     override fun onListenerConnected() {
@@ -121,89 +128,75 @@ class MediaNotificationService : NotificationListenerService() {
         val component = ComponentName(this, MediaNotificationService::class.java)
         try {
             sessionManager?.addOnActiveSessionsChangedListener(sessionListener, component)
-            if (SettingsManager.isServiceEnabled) {
-                handleSessions(sessionManager?.getActiveSessions(component))
-            }
-        } catch (e: Exception) {
-            AppLogger.log("[ERROR] Failed to hook Media Router: ${e.message}")
-        }
+            handleSessions(sessionManager?.getActiveSessions(component))
+        } catch (e: Exception) { AppLogger.log("[ERROR] Failed NLS hook: ${e.message}") }
     }
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        AppLogger.log("[SERVICE] ⚠️ WARNING: System abruptly unbound the NotificationListenerService!")
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                requestRebind(ComponentName(this, MediaNotificationService::class.java))
-                AppLogger.log("[SERVICE] Fired requestRebind() to wake the service back up.")
-            }
-        } catch (e: Exception) {
-            AppLogger.log("[SERVICE] Rebind request failed: ${e.message}")
-        }
+        AppLogger.log("[SERVICE] ⚠️ WARNING: System abruptly unbound NotificationListenerService!")
+        try { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) requestRebind(ComponentName(this, MediaNotificationService::class.java)) } catch (e: Exception) {}
     }
 
     private fun handleSessions(sessions: List<MediaController>?) {
-        if (!SettingsManager.isServiceEnabled) return
-        val newYtController = sessions?.find { SettingsManager.targetPackages.contains(it.packageName) }
+        val newController = sessions?.find { controller ->
+            val pkg = controller.packageName
+            val inSpot = (pkg == SettingsManager.SPOTIFY_PACKAGE) && SettingsManager.isSpotEnabled
+            val inYt = SettingsManager.targetPackages.contains(pkg) && SettingsManager.isServiceEnabled
+            inSpot || inYt
+        }
 
-        if (newYtController != null) {
-            if (ytController?.sessionToken == newYtController.sessionToken) return
-            AppLogger.log("[SERVICE] Hooked into MediaController (Token: ${newYtController.sessionToken}).")
-            ytController?.unregisterCallback(callback)
-            ytController = newYtController
-            ytController?.registerCallback(callback)
+        if (newController != null) {
+            if (ytController?.sessionToken == newController.sessionToken) return
+            AppLogger.log("[SERVICE] Hooked into MediaController (${newController.packageName}).")
+            ytController?.unregisterCallback(callback); ytController = newController; ytController?.registerCallback(callback)
             callback.onMetadataChanged(ytController?.metadata)
         } else {
             if (ytController != null) {
-                AppLogger.log("[SERVICE] Target playback closed or paused heavily. Detaching.")
-                ytController?.unregisterCallback(callback)
-                ytController = null
-                currentTitle = ""
-                trackingJob?.cancel()
-                fetchJob?.cancel()
-                skipSegments.clear()
+                AppLogger.log("[SERVICE] Active playback detached.")
+                ytController?.unregisterCallback(callback); ytController = null; currentTitleOrId = ""; trackingJob?.cancel(); fetchJob?.cancel(); skipSegments.clear()
             }
         }
     }
 
-    private suspend fun fetchSegmentsAndTrack(title: String) {
+    private suspend fun fetchSegmentsAndTrack(targetInput: String, isSpotMode: Boolean) {
         try {
-            val query = URLEncoder.encode(title, "UTF-8")
-            val searchReq = Request.Builder()
-                .url("https://www.youtube.com/results?search_query=$query")
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .build()
+            val targetVideoId: String
 
-            val searchRes = client.newCall(searchReq).execute()
-            val html = searchRes.body?.string() ?: ""
+            if (isSpotMode) {
+                targetVideoId = targetInput
+            } else {
+                val useStrict = SettingsManager.isStrictSearchEnabled
+                val scrapeMethod = if (useStrict) "strict intitle search" else "standard search"
+                val rawQuery = if (useStrict) "intitle:\"$targetInput\"" else targetInput
 
-            val regex = Regex("""/watch\?v=([a-zA-Z0-9_-]{11})""")
-            val match = regex.find(html)
+                val query = URLEncoder.encode(rawQuery, "UTF-8")
+                val searchReq = Request.Builder().url("https://www.youtube.com/results?search_query=$query").header("User-Agent", "Mozilla/5.0").build()
+                val html = client.newCall(searchReq).execute().body?.string() ?: ""
+                val match = Regex("""/watch\?v=([a-zA-Z0-9_-]{11})""").find(html)
 
-            if (match == null) {
-                if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID")
-                return
+                if (match == null) {
+                    AppLogger.log("[SCRAPER] FATAL: Failed to locate Video ID using method: $scrapeMethod.")
+                    if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID")
+                    return
+                }
+                
+                targetVideoId = match.groupValues[1]
+                AppLogger.log("[SCRAPER] Extracted ID: '$targetVideoId' | Method: [$scrapeMethod]")
             }
 
-            val videoId = match.groupValues[1]
-            AppLogger.log("[SCRAPER] Extracted Video ID: $videoId")
-
+            val serviceParam = if (isSpotMode) "&service=spotify" else ""
             val categoriesArr = """["sponsor","intro","outro","interaction","selfpromo","music_offtopic","preview","filler","hook"]"""
             val encCategories = URLEncoder.encode(categoriesArr, "UTF-8")
-            val apiUrl = "https://sponsor.ajay.app/api/skipSegments?videoID=$videoId&categories=$encCategories"
+            val apiUrl = "https://sponsor.ajay.app/api/skipSegments?videoID=$targetVideoId$serviceParam&categories=$encCategories"
 
             AppLogger.log("[API] Executing GET: $apiUrl")
-            val sponsorReq = Request.Builder().url(apiUrl).build()
-            val sponsorRes = client.newCall(sponsorReq).execute()
+            val sponsorRes = client.newCall(Request.Builder().url(apiUrl).build()).execute()
             AppLogger.log("[API] Response Code: ${sponsorRes.code}")
 
-            if (!sponsorRes.isSuccessful) {
-                if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the video")
-                return
-            }
+            if (!sponsorRes.isSuccessful) { if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the audio/video"); return }
 
             val sponsorJson = JSONArray(sponsorRes.body?.string() ?: "[]")
-            
             skipSegments.clear()
             val armedSegments = mutableListOf<Segment>()
 
@@ -211,84 +204,104 @@ class MediaNotificationService : NotificationListenerService() {
                 val obj = sponsorJson.getJSONObject(i)
                 val segment = obj.getJSONArray("segment")
                 val category = obj.getString("category")
-
+                val uuid = obj.optString("UUID", obj.optString("uuid", ""))
                 val action = SettingsManager.getSegmentAction(category)
                 val actionStr = if (action == 1) "Skip" else "Off"
-                AppLogger.log("[PARSE] Evaluated block [$category]. User setting = $actionStr")
 
                 if (action == 1) {
-                    val start = (segment.getDouble(0) * 1000).toLong()
-                    val end = (segment.getDouble(1) * 1000).toLong()
-                    armedSegments.add(Segment(start, end, category))
-                }
+                    val durationSec = segment.getDouble(1) - segment.getDouble(0)
+                    val minDur = SettingsManager.minSegmentDuration.toDouble()
+                    if (durationSec < minDur) {
+                        AppLogger.log("[PARSE] Evaluated [$category] = $actionStr (BLOCKED: ${String.format("%.2f", durationSec)}s < ${minDur}s min)")
+                    } else {
+                        AppLogger.log("[PARSE] Evaluated [$category] = $actionStr")
+                        val uuids = if (uuid.isNotBlank()) listOf(uuid) else emptyList()
+                        armedSegments.add(Segment((segment.getDouble(0) * 1000).toLong(), (segment.getDouble(1) * 1000).toLong(), category, uuids))
+                    }
+                } else { AppLogger.log("[PARSE] Evaluated [$category] = $actionStr") }
             }
 
             val sorted = armedSegments.sortedBy { it.startMs }
             val armedCount = sorted.size
-            
+
             if (sorted.isNotEmpty()) {
                 var current = sorted[0]
                 for (i in 1 until sorted.size) {
                     val next = sorted[i]
                     if (current.endMs >= next.startMs - 1000) {
-                        AppLogger.log("[TRACKER] Fusing adjacent segments: [${current.category}] and [${next.category}] into a multiple block.")
-                        current = Segment(current.startMs, max(current.endMs, next.endMs), "multiple")
-                    } else {
-                        skipSegments.add(current)
-                        current = next
-                    }
+                        AppLogger.log("[TRACKER] Fusing adjacent segments into multiple block.")
+                        current = Segment(current.startMs, max(current.endMs, next.endMs), "multiple", current.uuids + next.uuids)
+                    } else { skipSegments.add(current); current = next }
                 }
                 skipSegments.add(current)
             }
 
-            if (skipSegments.isEmpty()) {
-                if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the video")
-            } else {
-                AppLogger.log("[TRACKER] Engaging playback loop. Monitoring ${skipSegments.size} merged blocks (from $armedCount original enabled segments).")
+            if (skipSegments.isNotEmpty()) {
+                AppLogger.log("[TRACKER] Engaging playback loop for ${skipSegments.size} merged blocks.")
                 showToast("Loaded $armedCount segments to skip")
                 startTracking()
             }
         } catch (e: Exception) {
-            AppLogger.log("[FATAL EXCEPTION] Trace: ${e.message}")
+            AppLogger.log("[FATAL] Trace: ${e.message}")
             if (SettingsManager.isLoggingEnabled) showToast("Error fetching segments")
+        }
+    }
+
+    private fun sendSkipCount(uuid: String) {
+        try {
+            AppLogger.log("[API] Sending skip count for segment UUID: $uuid")
+            val url = "https://sponsor.ajay.app/api/viewedVideoSponsorTime?UUID=$uuid"
+            val req = Request.Builder()
+                .url(url)
+                .post(okhttp3.FormBody.Builder().build())
+                .build()
+            val resp = client.newCall(req).execute()
+            AppLogger.log("[API] Skip count response code for $uuid: ${resp.code}")
+            resp.close()
+        } catch (e: Exception) {
+            AppLogger.log("[API] Failed to send skip count for $uuid: ${e.message}")
         }
     }
 
     private fun startTracking() {
         trackingJob?.cancel()
-        var lastLogTime = 0L
-
         trackingJob = scope.launch(Dispatchers.Main) {
             while (isActive) {
-                val state = ytController?.playbackState
-                if (state?.state == PlaybackState.STATE_PLAYING) {
-                    val pos = state.position
+                try {
+                    val state = ytController?.playbackState
+                    if (state?.state == PlaybackState.STATE_PLAYING) {
+                        val pos = state.position
+                        val hit = skipSegments.find { pos in it.startMs..it.endMs }
 
-                    if (System.currentTimeMillis() - lastLogTime > 15000) {
-                        lastLogTime = System.currentTimeMillis()
-                    }
+                        if (hit != null) {
+                            AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hit.category.uppercase()} at $pos ms")
+                            try {
+                                ytController?.transportControls?.seekTo(hit.endMs)
+                            } catch (e: Exception) {
+                                AppLogger.log("[TRACKER] seekTo failed: ${e.message}")
+                            }
 
-                    val hitSegment = skipSegments.find { pos in it.startMs..it.endMs }
+                            SettingsManager.skippedCount += if (hit.category == "multiple") 2 else 1
+                            SettingsManager.timeSavedMs += (hit.endMs - hit.startMs)
+                            sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
 
-                    if (hitSegment != null) {
-                        AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hitSegment.category.uppercase()} at $pos ms")
-                        AppLogger.log("[TRACKER] Skip Authorized. Executing seekTo(${hitSegment.endMs})")
-                        ytController?.transportControls?.seekTo(hitSegment.endMs)
+                            if (SettingsManager.isSkipCountTrackingEnabled && hit.uuids.isNotEmpty()) {
+                                val uuidsToSend = hit.uuids.toList()
+                                scope.launch(Dispatchers.IO) {
+                                    for (uuid in uuidsToSend) {
+                                        sendSkipCount(uuid)
+                                    }
+                                }
+                            }
 
-                        val savedMs = hitSegment.endMs - hitSegment.startMs
-                        SettingsManager.skippedCount += if (hitSegment.category == "multiple") 2 else 1
-                        SettingsManager.timeSavedMs += savedMs
-                        sendBroadcast(Intent("me.jaival.sponsorskip.STATS_UPDATED").setPackage(packageName))
-
-                        if (hitSegment.category == "multiple") {
-                            AppLogger.log("[TRACKER] Skipped a fused multi-segment block.")
-                            showToast("Skipped Multiple segments")
-                        } else {
-                            showToast("Skipped: ${hitSegment.category.uppercase()}")
+                            showToast(if (hit.category == "multiple") "Skipped Multiple segments" else "Skipped: ${hit.category.uppercase()}")
+                            skipSegments.remove(hit)
+                            delay(2000)
                         }
-                        
-                        skipSegments.remove(hitSegment)
-                        delay(2000)
+                    }
+                } catch (e: Exception) {
+                    if (e !is CancellationException) {
+                        AppLogger.log("[TRACKER] Loop error: ${e.message}")
                     }
                 }
                 delay(1000)
@@ -296,12 +309,9 @@ class MediaNotificationService : NotificationListenerService() {
         }
     }
 
-    private fun showToast(message: String) {
-        mainHandler.post { Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show() }
-    }
-
+    private fun showToast(msg: String) = mainHandler.post { Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show() }
     override fun onDestroy() {
-        unregisterReceiver(toggleReceiver)
+        try { unregisterReceiver(toggleReceiver) } catch (e: Exception) {}
         scope.cancel()
         super.onDestroy()
     }

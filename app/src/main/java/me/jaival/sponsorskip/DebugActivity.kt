@@ -54,10 +54,13 @@ class DebugActivity : AppCompatActivity() {
             val finalLogs = if (switchRedact.isChecked) {
                 rawLogs
                     .replace(Regex("(?i)(title[:=]\\s*).+"), "$1[title]")
+                    .replace(Regex("(?i)(TITLE:\\s*).+"), "$1[title]")
                     .replace(Regex("(?i)(id[:=]\\s*)[a-zA-Z0-9_-]{11}"), "$1[id]")
                     .replace(Regex("v=[a-zA-Z0-9_-]{11}"), "v=[id]")
                     .replace(Regex("(?i)(Title: )'[^']*'"), "$1[title]")
                     .replace(Regex("(?i)(started for )'[^']*'"), "$1[title]")
+                    .replace(Regex("(?i)(MEDIA_ID[:=]\\s*).+"), "$1[id]")
+                    .replace(Regex("(?i)(Extracted: )'[^']*'"), "$1'[id]'")
                     .replace(Regex("(?i)(Extracted Title: )'[^']*'"), "$1[title]")
             } else {
                 rawLogs
@@ -66,7 +69,7 @@ class DebugActivity : AppCompatActivity() {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = ClipData.newPlainText("SponsorSkip Logs", finalLogs)
             clipboard.setPrimaryClip(clip)
-            Toast.makeText(this, if (switchRedact.isChecked) "Redacted logs copied!" else "Raw logs copied!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, if (switchRedact.isChecked) "Redacted logs copied! Always check logs before sharing." else "Raw logs copied! Always check logs before sharing.", Toast.LENGTH_LONG).show()
         }
 
         btnClear.setOnClickListener {

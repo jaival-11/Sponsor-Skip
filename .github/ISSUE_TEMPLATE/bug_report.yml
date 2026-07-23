@@ -77,7 +77,7 @@ body:
     id: debug-logs
     attributes:
       label: Debug logs
-      description: Go to settings > Debug Logs > Enable logging. Make sure to clear log, then reproduce the error and copy-paste logs here.
+      description: Go to settings > More > Debug Logs > Enable logging. Make sure to clear log, then reproduce the error and copy-paste logs here.
       render: text
       placeholder: Paste your logs here...
 
