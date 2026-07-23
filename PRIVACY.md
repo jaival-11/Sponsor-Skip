@@ -1,6 +1,6 @@
 # Privacy Policy for Sponsor Skip
 
-**Effective Date:** July 20, 2026  
+**Effective Date:** July 23, 2026  
 **Developer:** Jaival
 
 This Privacy Policy explains how Sponsor Skip ("the App") handles information when you use the application. By installing and using the App, you acknowledge and agree to the data processing practices described in this document.
@@ -28,10 +28,10 @@ Once the App determines the 11-character Video ID, it requests the skip timestam
 * **Skip Count Tracking:** Additionally if a user enables `Skip count tracking` in the app, only UUID of skipped segment is sent via a POST request to `sponsor.ajay.app`.
 * **Privacy Impact:** The SponsorBlock API does not receive your YouTube account information, but it may see the Video ID and your device's IP address. This data is handled in accordance with the [SponsorBlock Privacy Policy](https://gist.github.com/ajayyy/aa9f8ded2b573d4f73a3ffa0ef74f796). This request is made directly from your device to SponsorBlock servers. The request is not routed through, and is never processed or stored on, any servers or infrastructure owned, operated or controlled by the Developer. 
 
-### D. App Update Checks (Codeberg)
+### D. App Update Checks (GitHub)
 To ensure you are running the latest version, the App may check for updates periodically in background or on app open or when manually requested in the settings. Automatic checks for updates can be disabled by user from settings.
-* **The Process:** The App makes a network request to the public Codeberg API to check the repository's latest release tag.
-* **Privacy Impact:** No personal data or usage metrics are sent. However, your device's IP address may be exposed to Codeberg's servers during the request. This is governed by [Codeberg's Privacy Policy](https://codeberg.org/Codeberg/org/src/branch/main/PrivacyPolicy.md). This request is made directly from your device to Codeberg's servers. The request is not routed through, and is never processed or stored on, any servers or infrastructure owned, operated or controlled by the Developer.
+* **The Process:** The App makes a network request to the public GitHub API to check the repository's latest release tag.
+* **Privacy Impact:** No personal data or usage metrics are sent. However, your device's IP address may be exposed to GitHub's servers during the request. This is governed by [GitHub Privacy Policy](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement). This request is made directly from your device to GitHub's servers. The request is not routed through, and is never processed or stored on, any servers or infrastructure owned, operated or controlled by the Developer.
 
 ***Note**: While the app uses secure protocols to protect your data during transmission, no method of communication over the internet is completely secure, and the developer cannot guarantee absolute security against unauthorised inception or server-side exploits.*
 
@@ -42,7 +42,7 @@ The App stores user preferences (such as your chosen segment settings, the total
 The App acts as an independent, local client that interacts with external services. The Developer has no control over and is not responsible for the privacy practices or terms of service of these third parties.
 * **YouTube / Google LLC:** [Google Privacy Policy](https://policies.google.com/privacy)
 * **SponsorBlock:** [SponsorBlock Privacy Policy](https://gist.github.com/ajayyy/aa9f8ded2b573d4f73a3ffa0ef74f796)
-* **Codeberg:** [Codeberg Privacy Policy](https://codeberg.org/Codeberg/org/src/branch/main/PrivacyPolicy.md)
+* **GitHub:** [GitHub Privacy Policy](https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement)
 
 Sponsor Skip is an independent third-party application and is not affiliated with, endorsed by, sponsored by, or approved by YouTube, Google LLC, or SponsorBlock.
 
@@ -55,8 +55,8 @@ This Privacy Policy may be updated periodically to reflect changes in the App's 
 ## 7. Contact Information
 If you have any questions, concerns, or requests regarding this Privacy Policy or the technical operations of Sponsor Skip, you may reach out via:
 * **Email:** jaival7909@gmail.com
-* **Issue Tracker:** [Sponsor Skip Repository](https://codeberg.org/jaival/Sponsor-Skip/issues)
+* **Issue Tracker:** [Sponsor Skip Repository](https://github.com/jaival-11/Sponsor-Skip/issues)
 
 ---
 
-*The Privacy Policy was updated on 20th July, 2026*
+*The Privacy Policy was updated on 23th July, 2026*

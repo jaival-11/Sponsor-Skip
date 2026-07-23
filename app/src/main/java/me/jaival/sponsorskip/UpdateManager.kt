@@ -104,7 +104,7 @@ object UpdateManager {
 
             AppLogger.log("[UPDATER] Local App Version: '$currentVersion' | Pre-release Allowed: $includePreRelease")
 
-            val req = Request.Builder().url("https://codeberg.org/api/v1/repos/jaival/Sponsor-Skip/releases").build()
+            val req = Request.Builder().url("https://api.github.com/repos/jaival-11/Sponsor-Skip/releases").header("User-Agent", "Sponsor-Skip").build()
             val res = withContext(Dispatchers.IO) { client.newCall(req).execute() }
 
             if (!res.isSuccessful) {
@@ -180,7 +180,7 @@ object UpdateManager {
 
             AppLogger.log("[UPDATER] 24h Background Check - Local App Version: '$currentVersion'")
 
-            val req = Request.Builder().url("https://codeberg.org/api/v1/repos/jaival/Sponsor-Skip/releases").build()
+            val req = Request.Builder().url("https://api.github.com/repos/jaival-11/Sponsor-Skip/releases").header("User-Agent", "Sponsor-Skip").build()
             val res = withContext(Dispatchers.IO) { client.newCall(req).execute() }
 
             if (!res.isSuccessful) {
@@ -305,7 +305,7 @@ object UpdateManager {
 
         dialog.setOnShowListener {
             dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/releases/tag/v$tag"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip/releases/tag/v$tag"))
                 context.startActivity(intent)
             }
         }

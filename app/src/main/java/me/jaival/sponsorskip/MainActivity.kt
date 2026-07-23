@@ -170,11 +170,11 @@ class MainActivity : AppCompatActivity() {
     findViewById<View>(R.id.btnSetPerms).setOnClickListener { it.haptic(); startActivity(Intent(this, PermissionsActivity::class.java)) }
     btnCustomApps.setOnClickListener { it.haptic(); AppSelectionDialog.show(this@MainActivity) }
     findViewById<View>(R.id.btnSetMore).setOnClickListener { it.haptic(); startActivity(Intent(this, MoreActivity::class.java)) }
-    findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip"))) }
-    findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
-    findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip#bug-reports-feature-suggestions"))) }
+    findViewById<View>(R.id.btnSetRepo).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip"))) }
+    findViewById<View>(R.id.btnSetBugs).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip#bug-reports--feature-suggestions"))) }
+    findViewById<View>(R.id.btnSetFeature).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip#bug-reports--feature-suggestions"))) }
     findViewById<View>(R.id.btnSetContact).setOnClickListener { it.haptic(); val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { "Unknown" }; val intent = Intent(Intent.ACTION_SENDTO).apply { data = Uri.parse("mailto:jaival7909@gmail.com?subject=" + Uri.encode("Sponsor Skip - v$version")) }; startActivity(Intent.createChooser(intent, "Send Email")) }
-    findViewById<View>(R.id.btnSetPrivacy).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md"))) }
+    findViewById<View>(R.id.btnSetPrivacy).setOnClickListener { it.haptic(); startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip/blob/main/PRIVACY.md"))) }
     findViewById<View>(R.id.btnSetLicense).setOnClickListener { it.haptic(); AlertDialog.Builder(this).setTitle("License & Warranty").setMessage("Sponsor Skip: Auto-skips SponsorBlock segments in YouTube videos\nCopyright © 2026 Jaival\n\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.").setPositiveButton("View Full GPLv3") { _, _ -> startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gnu.org/licenses/gpl-3.0.html"))) }.setNegativeButton("Close", null).show() }
     findViewById<View>(R.id.btnSetCredits).setOnClickListener { view ->
       view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
@@ -277,7 +277,7 @@ class MainActivity : AppCompatActivity() {
     privacyDialog?.setOnShowListener {
       privacyDialog?.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { view ->
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/PRIVACY.md")))
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip/blob/main/PRIVACY.md")))
       }
     }
     privacyDialog?.show()
@@ -427,7 +427,7 @@ class MainActivity : AppCompatActivity() {
     val clickableSpan = object : ClickableSpan() {
       override fun onClick(widget: View) {
         widget.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival")))
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11")))
       }
     }
     val start = text.indexOf("Jaival")

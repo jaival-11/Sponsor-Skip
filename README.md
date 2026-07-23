@@ -8,7 +8,7 @@
 
 <br/>
 
-[![Latest release](https://img.shields.io/gitea/v/release/jaival/Sponsor-Skip?gitea_url=https%3A%2F%2Fcodeberg.org&style=for-the-badge&labelColor=0d1117)](https://codeberg.org/jaival/Sponsor-Skip/releases/latest) [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&labelColor=0d1117&color=EA7233)](https://codeberg.org/jaival/Sponsor-Skip/src/branch/main/LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/jaival-11/Sponsor-Skip?style=for-the-badge&labelColor=0d1117)](https://github.com/jaival-11/Sponsor-Skip/releases/latest) [![License](https://img.shields.io/badge/License-GPL--3.0-blue?style=for-the-badge&labelColor=0d1117&color=EA7233)](https://github.com/jaival-11/Sponsor-Skip/blob/main/LICENSE)
 
 [![Official Wiki](https://img.shields.io/badge/Listed_on-SponsorBlock_Wiki-2ea44f?style=for-the-badge&labelColor=0d1117)](https://github.com/ajayyy/SponsorBlock/wiki/Android)
 
@@ -87,15 +87,16 @@ You can download the latest compiled APK directly from the following sources:
 
 <table>
   <tr>
-    <th align="center">Codeberg</th>
+    <th align="center">GitHub</th>
     <th align="center">Obtainium </th>  </tr>
   <tr>
     <td align="center">
-      <a href="https://codeberg.org/jaival/Sponsor-Skip/releases/latest">
-        <img src="https://codeberg.org/attachments/273c5a95-5e92-44cd-8735-c79506210e50" alt="Download from Codeberg Releases" height="50">
+      <a href="https://github.com/jaival-11/Sponsor-Skip/releases/latest">
+        <img src="https://raw.githubusercontent.com/NeoApplications/Neo-Backup/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" alt="Download from GitHub Releases" height="70">
+      </a>
     </td>    
     <td align="center">
-      <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://codeberg.org/jaival/Sponsor-Skip">
+      <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/jaival-11/Sponsor-Skip">
         <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/refs/heads/main/assets/graphics/badge_obtainium.png" alt="Download from Obtainium" height="70">
       </a>
     </td>
@@ -115,7 +116,7 @@ If you prefer to compile the app yourself, you can easily build it from the sour
 *(Note: You can even build this directly on an Android device using Termux, just like the developer does!)*
 
 ```
-git clone https://codeberg.org/jaival/Sponsor-Skip.git
+git clone https://github.com/jaival-11/Sponsor-Skip.git
 cd Sponsor-Skip
 ./gradlew assembleDebug
 ```
@@ -139,17 +140,17 @@ Encountered a bug or have a brilliant idea to make Sponsor Skip even better?
 
 * **Found a bug?**   
 
-Open a [Bug Report](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2fbug_report.yml) using the provided template. Please include necessary and correct details so it can be squashed quickly!  
+Open a [Bug Report](https://github.com/jaival-11/Sponsor-Skip/issues/new?template=bug_report.yml) using the provided template. Please include necessary and correct details so it can be squashed quickly!  
 
 * **Have an idea?**   
 
-Open a [Feature Request](https://codeberg.org/jaival/Sponsor-Skip/issues/new?template=.github%2fISSUE_TEMPLATE%2ffeature_request.yml) using the provided template and describe how it would improve the app. 
+Open a [Feature Request](https://github.com/jaival-11/Sponsor-Skip/issues/new?template=feature_request.yml) using the provided template and describe how it would improve the app. 
 
 ### Got any questions?
 
-Feel free to open an [Issue](https://codeberg.org/jaival/Sponsor-Skip/issues/new/choose)
+Feel free to open an [Issue](https://github.com/jaival-11/Sponsor-Skip/issues/new/choose)
 
-*You can also contact me directly via details given at the top, though [Codeberg Issues](https://codeberg.org/jaival/SponsorSkip/issues) is preferred.*
+*You can also contact me directly via details given at the top, though [GitHub Issues](https://github.com/jaival-11/Sponsor-Skip/issues) is preferred.*
 
 ---
 
@@ -237,6 +238,6 @@ Copyright © 2026 Jaival
 
 <div align="center">
 
-**Made with ❤️ by [Jaival](https://codeberg.org/jaival)**
+**Made with ❤️ by [Jaival](https://github.com/jaival-11)**
 
 </div>

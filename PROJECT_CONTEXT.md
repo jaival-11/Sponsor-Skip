@@ -33,6 +33,6 @@ Sponsor Skip is a native Android application written in Kotlin that automaticall
 ## Key Components
 * **`SettingsManager.kt`:** The brain of the app. Wraps SharedPreferences and handles the synchronization of the Master Switch, Foreground Service, and Strict Search states.
 * **`AppLogger.kt`:** Custom debug logging system that writes to a local file (`skipper_logs.txt`) for user debugging and issue reporting.
-* **`UpdateManager.kt`:** Custom in-app updater that parses Codeberg releases.
+* **`UpdateManager.kt`:** Custom in-app updater that parses GitHub releases.
 * **`AppSelectionDialog.kt`:** Allows users to bind the service to custom/third-party YouTube clients.
 
