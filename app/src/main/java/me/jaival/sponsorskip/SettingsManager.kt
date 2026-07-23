@@ -134,6 +134,10 @@ object SettingsManager {
         get() = prefs.getFloat("min_segment_duration", 0f)
         set(value) { prefs.edit().putFloat("min_segment_duration", value).commit() }
 
+    var skipOffset: Float
+        get() = if (prefs.contains("skip_offset")) prefs.getFloat("skip_offset", 0f) else prefs.getFloat("sync_offset", 0f)
+        set(value) { prefs.edit().putFloat("skip_offset", value).commit() }
+
     fun getPreReleaseSetting(context: Context): Boolean {
         val vName = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch(e: Exception) { "" }
         if (vName?.contains("dev") == true) {
@@ -214,7 +218,7 @@ object SettingsManager {
                         editor.putStringSet(key, set)
                     }
                     is Number -> {
-                        if (key == "min_segment_duration") {
+                        if (key == "min_segment_duration" || key == "skip_offset" || key == "sync_offset") {
                             editor.putFloat(key, value.toFloat())
                         } else if (key == "stat_time") {
                             editor.putLong(key, value.toLong())

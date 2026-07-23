@@ -216,7 +216,15 @@ class MediaNotificationService : NotificationListenerService() {
                     } else {
                         AppLogger.log("[PARSE] Evaluated [$category] = $actionStr")
                         val uuids = if (uuid.isNotBlank()) listOf(uuid) else emptyList()
-                        armedSegments.add(Segment((segment.getDouble(0) * 1000).toLong(), (segment.getDouble(1) * 1000).toLong(), category, uuids))
+                        val skipOffsetMs = SettingsManager.skipOffset.toLong()
+                        val rawStartMs = (segment.getDouble(0) * 1000).toLong()
+                        val rawEndMs = (segment.getDouble(1) * 1000).toLong()
+                        val startMs = maxOf(0L, rawStartMs + skipOffsetMs)
+                        val endMs = maxOf(0L, rawEndMs + skipOffsetMs)
+                        if (skipOffsetMs != 0L) {
+                            AppLogger.log("[PARSE] Applied skip offset of ${skipOffsetMs}ms to [$category]: original (${rawStartMs}-${rawEndMs}ms) -> (${startMs}-${endMs}ms)")
+                        }
+                        armedSegments.add(Segment(startMs, endMs, category, uuids))
                     }
                 } else { AppLogger.log("[PARSE] Evaluated [$category] = $actionStr") }
             }
