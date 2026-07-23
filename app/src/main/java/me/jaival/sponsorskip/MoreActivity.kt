@@ -96,7 +96,7 @@ class MoreActivity : AppCompatActivity() {
 
     private fun setupCollapsibleRow(containerId: Int, descId: Int, arrowId: Int, label: String) {
         val container = findViewById<View>(containerId)
-        val descText = findViewById<android.widget.TextView>(descId)
+        val descText = findViewById<View>(descId)
         val arrowText = findViewById<android.widget.TextView>(arrowId)
 
         container?.setOnClickListener {
@@ -117,6 +117,7 @@ class MoreActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_more)
 
+        setupCollapsibleRow(R.id.layoutUpdatesHeader, R.id.contentUpdates, R.id.arrowUpdates, "Updates")
         setupCollapsibleRow(R.id.layoutStrictSearch, R.id.descStrictSearch, R.id.arrowStrictSearch, "Strict search")
         setupCollapsibleRow(R.id.layoutSpot, R.id.descSpot, R.id.arrowSpot, "Spot SponsorBlock")
         setupCollapsibleRow(R.id.layoutForeground, R.id.descForeground, R.id.arrowForeground, "Foreground service")
