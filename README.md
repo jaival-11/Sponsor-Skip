@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://codeberg.org/repo-avatars/6d562eaeec18e10849ff8b460d3c4402c2dbce6b9f00a7438134ad78cc1d6c7c" alt="Sponsor Skip app icon" width="200" />
+<img src="https://raw.githubusercontent.com/jaival-11/Sponsor-Skip/refs/heads/main/assets/graphics/icon.png" alt="Sponsor Skip app icon" width="200" />
 
 # Sponsor Skip
 
@@ -18,7 +18,7 @@
 
 <br/>
 
-[**Download**](#where-to-get-it) · [**Features**](#features) · [**Support**](#bug-reports-feature-suggestions)
+[**Download**](#where-to-get-it) · [**Features**](#features) · [**Support**](#bug-reports--feature-suggestions)
 
 ---
 
@@ -31,9 +31,9 @@
 | [Where to Get It (Download)](#where-to-get-it) | Download links for the latest stable APK |
 | [Build from Source](#build-from-source) | Prerequisites and compilation instructions |
 | [Contributions](#contributions) | Guidelines for contributing to the repository |
-| [Bug Reports & Feature Suggestions](#bug-reports-feature-suggestions) | How to report issues or request new features |
+| [Bug Reports & Feature Suggestions](#bug-reports--feature-suggestions) | How to report issues or request new features |
 | [Under the Hood](#under-the-hood-for-developers) | Tech stack and  core architecture |
-| [Attributions & Credits](#attributions-credits) | Acknowledgments of third-party tools and creators |
+| [Attributions & Credits](#attributions--credits) | Acknowledgments of third-party tools and creators |
 | [Privacy Policy](#privacy-policy) | Link to the complete Privacy Policy |
 | [Disclaimer](#disclaimer) | Terms of service, liability, and disclosures |
 | [License](#license) | GNU General Public License v3.0 details |
@@ -44,7 +44,7 @@
 
 <h2><a id="screenshots"></a>Screenshots</h2>
 
-<img src="https://codeberg.org/attachments/fb302b5b-caf4-4f79-b5c9-2e7a8a65e60f" alt="Home screen" width="30%" /> <img src="https://codeberg.org/attachments/77c77205-8a3a-46f1-b5ba-db43b505829e" alt="Settings Screen" width="30%" /> <img src="https://codeberg.org/attachments/e7fa8f76-4f8c-4a73-a4e3-cc02d962c133" alt="Permissions Screen" width="30%" />
+<img src="https://raw.githubusercontent.com/jaival-11/Sponsor-Skip/refs/heads/main/assets/screenshots/Screenshot1.jpg" alt="Home tab" width="30%" /> <img src="https://raw.githubusercontent.com/jaival-11/Sponsor-Skip/refs/heads/main/assets/screenshots/Screenshot2.jpg" alt="Settings Tab" width="30%" /> <img src="https://raw.githubusercontent.com/jaival-11/Sponsor-Skip/refs/heads/main/assets/screenshots/Screenshot3.jpg" alt="Additional settings" width="30%" />
 
 ---
 
@@ -206,7 +206,7 @@ This project stands on the shoulders of giants. A massive thank you to the devel
 ## Privacy Policy
 Read complete Privacy Policy (human-readable) at [Privacy Policy](PRIVACY.md).  
   
-*The [Privacy Policy](PRIVACY.md) was last updated on 20th July, 2026.*
+*The [Privacy Policy](PRIVACY.md) was last updated on 23rd July, 2026.*
 
 ---
 
