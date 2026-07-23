@@ -353,6 +353,7 @@
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
             <TextView android:id="@+id/btnSetMinDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Minimum segment duration" android:drawableStart="@drawable/ic_schedule" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
+            <TextView android:id="@+id/btnSetSkipOffset" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Skip offset" android:drawableStart="@drawable/ic_linear_scale" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
             <TextView android:id="@+id/btnBackupRestore" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Backup &amp; Restore" android:drawableStart="@drawable/ic_backup" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
             <TextView android:id="@+id/btnSetDebug" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Debug Logs" android:drawableStart="@drawable/ic_terminal" android:drawablePadding="16dp" android:padding="16dp" android:background="?attr/selectableItemBackground" android:textSize="16sp"/>
         </LinearLayout>

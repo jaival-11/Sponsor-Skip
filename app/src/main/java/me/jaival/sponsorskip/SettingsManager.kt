@@ -100,10 +100,6 @@ object SettingsManager {
         get() = prefs.getBoolean("privacy_accepted", false)
         set(value) { prefs.edit().putBoolean("privacy_accepted", value).commit() }
 
-    var isMigrationNoticeDismissed: Boolean
-        get() = prefs.getBoolean("migration_notice_dismissed", false)
-        set(value) { prefs.edit().putBoolean("migration_notice_dismissed", value).commit() }
-
     var isServiceEnabled: Boolean
         get() = prefs.getBoolean("service_master_switch", true)
         set(value) {
@@ -137,6 +133,10 @@ object SettingsManager {
     var minSegmentDuration: Float
         get() = prefs.getFloat("min_segment_duration", 0f)
         set(value) { prefs.edit().putFloat("min_segment_duration", value).commit() }
+
+    var skipOffset: Float
+        get() = if (prefs.contains("skip_offset")) prefs.getFloat("skip_offset", 0f) else prefs.getFloat("sync_offset", 0f)
+        set(value) { prefs.edit().putFloat("skip_offset", value).commit() }
 
     fun getPreReleaseSetting(context: Context): Boolean {
         val vName = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch(e: Exception) { "" }
@@ -174,9 +174,12 @@ object SettingsManager {
 
     fun exportSettingsJson(): String {
         val json = org.json.JSONObject()
-        // Explicitly include statistics data (skippedCount & timeSavedMs)
+        // Explicitly include statistics and update preferences
         json.put("stat_count", skippedCount)
         json.put("stat_time", timeSavedMs)
+        json.put("auto_update_check_enabled", isAutoUpdateCheckEnabled)
+        val preRelease = if (::appContext.isInitialized) getPreReleaseSetting(appContext) else prefs.getBoolean("pre_release_updates", false)
+        json.put("pre_release_updates", preRelease)
 
         val allPrefs = prefs.all
         for ((key, value) in allPrefs) {
@@ -191,7 +194,7 @@ object SettingsManager {
                 else -> json.put(key, value)
             }
         }
-        AppLogger.log("[BACKUP] Exported ${json.length()} keys including statistics (skippedCount: $skippedCount, timeSavedMs: $timeSavedMs)")
+        AppLogger.log("[BACKUP] Exported ${json.length()} keys including statistics and update preferences (autoUpdate: $isAutoUpdateCheckEnabled, preRelease: $preRelease)")
         return json.toString(4)
     }
 
@@ -215,7 +218,7 @@ object SettingsManager {
                         editor.putStringSet(key, set)
                     }
                     is Number -> {
-                        if (key == "min_segment_duration") {
+                        if (key == "min_segment_duration" || key == "skip_offset" || key == "sync_offset") {
                             editor.putFloat(key, value.toFloat())
                         } else if (key == "stat_time") {
                             editor.putLong(key, value.toLong())
@@ -237,9 +240,15 @@ object SettingsManager {
             editor.commit()
             syncForegroundService()
             if (::appContext.isInitialized) {
+                if (isAutoUpdateCheckEnabled) {
+                    UpdateCheckWorker.schedule(appContext)
+                } else {
+                    UpdateCheckWorker.cancel(appContext)
+                }
                 appContext.sendBroadcast(android.content.Intent("me.jaival.sponsorskip.STATS_UPDATED"))
             }
-            AppLogger.log("[BACKUP] Restored $count keys including statistics (skippedCount: $skippedCount, timeSavedMs: $timeSavedMs)")
+            val restoredPreRelease = if (::appContext.isInitialized) getPreReleaseSetting(appContext) else prefs.getBoolean("pre_release_updates", false)
+            AppLogger.log("[BACKUP] Restored $count keys including statistics and update preferences (autoUpdate: $isAutoUpdateCheckEnabled, preRelease: $restoredPreRelease)")
             true
         } catch (e: Exception) {
             AppLogger.log("[BACKUP] Error importing settings and statistics: ${e.message}")
