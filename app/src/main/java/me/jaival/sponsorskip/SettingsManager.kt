@@ -100,6 +100,10 @@ object SettingsManager {
         get() = prefs.getBoolean("privacy_accepted", false)
         set(value) { prefs.edit().putBoolean("privacy_accepted", value).commit() }
 
+    var isMigrationNoticeDismissed: Boolean
+        get() = prefs.getBoolean("migration_notice_dismissed", false)
+        set(value) { prefs.edit().putBoolean("migration_notice_dismissed", value).commit() }
+
     var isServiceEnabled: Boolean
         get() = prefs.getBoolean("service_master_switch", true)
         set(value) {
@@ -135,11 +139,22 @@ object SettingsManager {
         set(value) { prefs.edit().putFloat("min_segment_duration", value).commit() }
 
     fun getPreReleaseSetting(context: Context): Boolean {
+        val vName = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch(e: Exception) { "" }
+        if (vName?.contains("dev") == true) {
+            if (prefs.getBoolean("pre_release_updates", false) != true) {
+                setPreReleaseSetting(true)
+                AppLogger.log("[SETTINGS] Pre-release version detected ('$vName'). Auto-enabled and saved pre-release updates toggle.")
+            }
+            return true
+        }
         if (prefs.contains("pre_release_updates")) return prefs.getBoolean("pre_release_updates", false)
-        val vName = try { context.packageManager.getPackageInfo(context.packageName, 0).versionName } catch(e:Exception){""}
-        return vName?.contains("dev") == true
+        return false
     }
-    fun setPreReleaseSetting(value: Boolean) { prefs.edit().putBoolean("pre_release_updates", value).commit() }
+
+    fun setPreReleaseSetting(value: Boolean) { 
+        prefs.edit().putBoolean("pre_release_updates", value).commit() 
+        AppLogger.log("[SETTINGS] Pre-release updates setting set to $value")
+    }
 
     var lastCheckTime: Long
         get() = prefs.getLong("last_update_check_time", 0L)
