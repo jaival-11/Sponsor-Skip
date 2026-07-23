@@ -174,9 +174,12 @@ object SettingsManager {
 
     fun exportSettingsJson(): String {
         val json = org.json.JSONObject()
-        // Explicitly include statistics data (skippedCount & timeSavedMs)
+        // Explicitly include statistics and update preferences
         json.put("stat_count", skippedCount)
         json.put("stat_time", timeSavedMs)
+        json.put("auto_update_check_enabled", isAutoUpdateCheckEnabled)
+        val preRelease = if (::appContext.isInitialized) getPreReleaseSetting(appContext) else prefs.getBoolean("pre_release_updates", false)
+        json.put("pre_release_updates", preRelease)
 
         val allPrefs = prefs.all
         for ((key, value) in allPrefs) {
@@ -191,7 +194,7 @@ object SettingsManager {
                 else -> json.put(key, value)
             }
         }
-        AppLogger.log("[BACKUP] Exported ${json.length()} keys including statistics (skippedCount: $skippedCount, timeSavedMs: $timeSavedMs)")
+        AppLogger.log("[BACKUP] Exported ${json.length()} keys including statistics and update preferences (autoUpdate: $isAutoUpdateCheckEnabled, preRelease: $preRelease)")
         return json.toString(4)
     }
 
@@ -237,9 +240,15 @@ object SettingsManager {
             editor.commit()
             syncForegroundService()
             if (::appContext.isInitialized) {
+                if (isAutoUpdateCheckEnabled) {
+                    UpdateCheckWorker.schedule(appContext)
+                } else {
+                    UpdateCheckWorker.cancel(appContext)
+                }
                 appContext.sendBroadcast(android.content.Intent("me.jaival.sponsorskip.STATS_UPDATED"))
             }
-            AppLogger.log("[BACKUP] Restored $count keys including statistics (skippedCount: $skippedCount, timeSavedMs: $timeSavedMs)")
+            val restoredPreRelease = if (::appContext.isInitialized) getPreReleaseSetting(appContext) else prefs.getBoolean("pre_release_updates", false)
+            AppLogger.log("[BACKUP] Restored $count keys including statistics and update preferences (autoUpdate: $isAutoUpdateCheckEnabled, preRelease: $restoredPreRelease)")
             true
         } catch (e: Exception) {
             AppLogger.log("[BACKUP] Error importing settings and statistics: ${e.message}")
