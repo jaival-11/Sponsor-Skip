@@ -69,7 +69,6 @@ class MainActivity : AppCompatActivity() {
   }
 
   private var privacyDialog: AlertDialog? = null
-  private var migrationNoticeDialog: AlertDialog? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -91,11 +90,7 @@ class MainActivity : AppCompatActivity() {
     AppLogger.log("[UI] MainActivity onCreate triggered.")
     setContentView(R.layout.activity_main)
     
-    if (!SettingsManager.isPrivacyAccepted) {
-      showPrivacyDialog()
-    } else if (!SettingsManager.isMigrationNoticeDismissed) {
-      showMigrationNoticeDialog()
-    }
+    if (!SettingsManager.isPrivacyAccepted) { showPrivacyDialog() }
 
     fun View.haptic() = this.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
 
@@ -278,7 +273,7 @@ class MainActivity : AppCompatActivity() {
   private fun showPrivacyDialog() {
     if (privacyDialog?.isShowing == true) return
     val message = "To keep things transparent and respect your privacy, here is exactly how the app works under the hood:\n\n1. Finding the Video: The app requires 'Notification Access' to securely read your device's active media player. This lets the app see the Title of the video you are watching. The app DOES NOT read your personal messages or other notifications.\n\n2. Getting the Video ID: Because the media player doesn't provide a direct link, the app searches the public YouTube website using the Title to grab the official 'Video ID'. However, no account data, logins, or cookies are sent.\n\n3. Skipping the segments: The app sends that Video ID to the community-run SponsorBlock API (sponsor.ajay.app) to get the skip timestamps.\n\n4. Local processing: The actual skipping happens entirely on your phone. The app never collects, store, share, or sell your viewing history.\n\nYou can know more from our Privacy Policy\n\nBy tapping 'Accept', you consent to our Privacy Policy."
-    privacyDialog = AlertDialog.Builder(this).setTitle("Welcome to Sponsor Skip!").setMessage(message).setCancelable(false).setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true; if (!SettingsManager.isMigrationNoticeDismissed) { showMigrationNoticeDialog() }; lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }.setNegativeButton("Decline") { _, _ -> finishAffinity() }.setNeutralButton("Privacy Policy", null).create()
+    privacyDialog = AlertDialog.Builder(this).setTitle("Welcome to Sponsor Skip!").setMessage(message).setCancelable(false).setPositiveButton("Accept") { _, _ -> SettingsManager.isPrivacyAccepted = true; lifecycleScope.launch { UpdateManager.checkUpdate(this@MainActivity, false) } }.setNegativeButton("Decline") { _, _ -> finishAffinity() }.setNeutralButton("Privacy Policy", null).create()
     privacyDialog?.setOnShowListener {
       privacyDialog?.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { view ->
         view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -286,35 +281,6 @@ class MainActivity : AppCompatActivity() {
       }
     }
     privacyDialog?.show()
-  }
-
-  private fun showMigrationNoticeDialog() {
-    if (migrationNoticeDialog?.isShowing == true) return
-    AppLogger.log("[UI] Showing Migration Notice dialog.")
-    val message = "The app is moved from Codeberg to Github. This is to inform that Privacy Policy has been updated to correspond with this change."
-    migrationNoticeDialog = AlertDialog.Builder(this)
-      .setTitle("Migration Notice")
-      .setMessage(message)
-      .setCancelable(false)
-      .setPositiveButton("Understood") { _, _ ->
-        AppLogger.log("[UI] Migration Notice dismissed by user.")
-        SettingsManager.isMigrationNoticeDismissed = true
-      }
-      .setNegativeButton("Privacy Policy", null)
-      .setNeutralButton("Know More", null)
-      .create()
-
-    migrationNoticeDialog?.setOnShowListener {
-      migrationNoticeDialog?.getButton(AlertDialog.BUTTON_NEGATIVE)?.setOnClickListener { view ->
-        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/jaival-11/Sponsor-Skip/blob/main/PRIVACY.md")))
-      }
-      migrationNoticeDialog?.getButton(AlertDialog.BUTTON_NEUTRAL)?.setOnClickListener { view ->
-        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://codeberg.org/jaival/Sponsor-Skip/issues/8")))
-      }
-    }
-    migrationNoticeDialog?.show()
   }
 
   override fun onResume() {
@@ -474,7 +440,6 @@ class MainActivity : AppCompatActivity() {
     unregisterReceiver(statsReceiver)
     unregisterReceiver(liveStateReceiver)
     privacyDialog?.dismiss()
-    migrationNoticeDialog?.dismiss()
     super.onDestroy()
   }
   

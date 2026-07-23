@@ -100,10 +100,6 @@ object SettingsManager {
         get() = prefs.getBoolean("privacy_accepted", false)
         set(value) { prefs.edit().putBoolean("privacy_accepted", value).commit() }
 
-    var isMigrationNoticeDismissed: Boolean
-        get() = prefs.getBoolean("migration_notice_dismissed", false)
-        set(value) { prefs.edit().putBoolean("migration_notice_dismissed", value).commit() }
-
     var isServiceEnabled: Boolean
         get() = prefs.getBoolean("service_master_switch", true)
         set(value) {
