@@ -94,9 +94,34 @@ class MoreActivity : AppCompatActivity() {
         findViewById<MaterialSwitch>(R.id.switchSkipCountTracking)?.isChecked = SettingsManager.isSkipCountTrackingEnabled
     }
 
+    private fun setupCollapsibleRow(containerId: Int, descId: Int, arrowId: Int, label: String) {
+        val container = findViewById<View>(containerId)
+        val descText = findViewById<android.widget.TextView>(descId)
+        val arrowText = findViewById<android.widget.TextView>(arrowId)
+
+        container?.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            if (descText?.visibility == View.GONE) {
+                descText.visibility = View.VISIBLE
+                arrowText?.text = " ▲"
+                AppLogger.log("[UI] $label description expanded")
+            } else {
+                descText?.visibility = View.GONE
+                arrowText?.text = " ▼"
+                AppLogger.log("[UI] $label description collapsed")
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_more)
+
+        setupCollapsibleRow(R.id.layoutStrictSearch, R.id.descStrictSearch, R.id.arrowStrictSearch, "Strict search")
+        setupCollapsibleRow(R.id.layoutSpot, R.id.descSpot, R.id.arrowSpot, "Spot SponsorBlock")
+        setupCollapsibleRow(R.id.layoutForeground, R.id.descForeground, R.id.arrowForeground, "Foreground service")
+        setupCollapsibleRow(R.id.layoutSkipCountTracking, R.id.descSkipCountTracking, R.id.arrowSkipCountTracking, "Skip count tracking")
+
         val switchStrict = findViewById<com.google.android.material.materialswitch.MaterialSwitch>(R.id.switchStrictSearch)
         switchStrict?.isChecked = SettingsManager.isStrictSearchEnabled
         switchStrict?.setOnCheckedChangeListener { _, isChecked ->

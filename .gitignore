@@ -9,3 +9,16 @@ local.properties
 *.keystore
 *.jks
 *.apk
+
+.gravity/
+*.gravity
+gravity.log
+gravity-config.local.json
+
+
+node_modules/
+build/
+dist/
+
+.env
+.env.local

@@ -15,28 +15,52 @@
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="?attr/colorSurfaceVariant"/>
 
             <LinearLayout
+                android:id="@+id/layoutStrictSearch"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-                    <TextView
+                    android:orientation="vertical"
+                    android:paddingEnd="16dp">
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Strict search"
-                        android:textSize="16sp"
-                        android:textColor="?android:attr/textColorPrimary" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Strict search"
+                            android:textSize="16sp"
+                            android:textColor="?attr/colorOnSurface" />
+                        <TextView
+                            android:id="@+id/arrowStrictSearch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ▼"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
                     <TextView
+                        android:id="@+id/descStrictSearch"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Use strict search to ensure more accurate results. It may break for videos with certain titles"
                         android:textSize="14sp"
-                        android:textColor="?android:attr/textColorSecondary" />
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
                 </LinearLayout>
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchStrictSearch"
@@ -44,37 +68,107 @@
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical" android:background="?attr/selectableItemBackground">
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingEnd="16dp">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Spot SponsorBlock" android:textSize="16sp" android:textColor="?attr/colorOnSurface"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SponsorBlock for Spotify" android:textSize="14sp" android:textColor="?attr/colorOnSurfaceVariant" android:layout_marginTop="4dp"/>
-                </LinearLayout>
-                <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/switchSpot" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-            </LinearLayout>
-
             <LinearLayout
+                android:id="@+id/layoutSpot"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-                    <TextView
+                    android:orientation="vertical"
+                    android:paddingEnd="16dp">
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Foreground service"
-                        android:textSize="16sp"
-                        android:textColor="?android:attr/textColorPrimary" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Spot SponsorBlock"
+                            android:textSize="16sp"
+                            android:textColor="?attr/colorOnSurface" />
+                        <TextView
+                            android:id="@+id/arrowSpot"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ▼"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
                     <TextView
+                        android:id="@+id/descSpot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SponsorBlock for Spotify"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
+                </LinearLayout>
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchSpot"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutForeground"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingEnd="16dp">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Foreground service"
+                            android:textSize="16sp"
+                            android:textColor="?attr/colorOnSurface" />
+                        <TextView
+                            android:id="@+id/arrowForeground"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ▼"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/descForeground"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Run a foreground service if you are currently facing problems (may consume more battery)"
                         android:textSize="14sp"
-                        android:textColor="?android:attr/textColorSecondary" />
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
                 </LinearLayout>
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchForeground"
@@ -83,28 +177,52 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/layoutSkipCountTracking"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="16dp"
-                android:gravity="center_vertical">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:gravity="center_vertical"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-                    <TextView
+                    android:orientation="vertical"
+                    android:paddingEnd="16dp">
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Enable Skip Count tracking"
-                        android:textSize="16sp"
-                        android:textColor="?android:attr/textColorPrimary" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Enable Skip Count tracking"
+                            android:textSize="16sp"
+                            android:textColor="?attr/colorOnSurface" />
+                        <TextView
+                            android:id="@+id/arrowSkipCountTracking"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text=" ▼"
+                            android:textSize="12sp"
+                            android:textColor="?attr/colorOnSurfaceVariant" />
+                    </LinearLayout>
                     <TextView
+                        android:id="@+id/descSkipCountTracking"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Sends skip counts to contribute to the SponsorBlock leaderboard to track how much time is saved. Only segment UUID is sent, no personal information like account info, etc is sent."
                         android:textSize="14sp"
-                        android:textColor="?android:attr/textColorSecondary" />
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:layout_marginTop="4dp"
+                        android:visibility="gone" />
                 </LinearLayout>
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchSkipCountTracking"
