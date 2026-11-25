@@ -105,7 +105,7 @@ class MediaNotificationService : NotificationListenerService() {
             if (intent?.action == "me.jaival.sponsorskip.TOGGLE_SERVICE") {
                 if (!SettingsManager.isServiceEnabled && !SettingsManager.isSpotEnabled) {
                     AppLogger.log("[SERVICE] MASTER KILL SIGNAL. Wiping memory and detaching hooks.")
-                    trackingJob?.cancel(); fetchJob?.cancel(); ytController?.unregisterCallback(callback); ytController = null; currentTitleOrId = ""; skipSegments.clear()
+                    trackingJob?.cancel(); fetchJob?.cancel(); ytController?.unregisterCallback(callback); ytController = null; currentTitleOrId = ""; skipSegments.clear(); disarmedSegments.clear()
                 } else {
                     AppLogger.log("[SERVICE] CONFIG CHANGED. Re-evaluating active hooks.")
                     val component = ComponentName(this@MediaNotificationService, MediaNotificationService::class.java)
@@ -154,7 +154,7 @@ class MediaNotificationService : NotificationListenerService() {
         } else {
             if (ytController != null) {
                 AppLogger.log("[SERVICE] Active playback detached.")
-                ytController?.unregisterCallback(callback); ytController = null; currentTitleOrId = ""; trackingJob?.cancel(); fetchJob?.cancel(); skipSegments.clear()
+                ytController?.unregisterCallback(callback); ytController = null; currentTitleOrId = ""; trackingJob?.cancel(); fetchJob?.cancel(); skipSegments.clear(); disarmedSegments.clear()
             }
         }
     }
@@ -271,15 +271,32 @@ class MediaNotificationService : NotificationListenerService() {
         }
     }
 
+    /**
+     * Segments that were already skipped during this playback.
+     *
+     * They are kept here instead of being removed from [skipSegments] so that
+     * they can be re-armed when the user seeks back before their start.
+     */
+    private val disarmedSegments = mutableSetOf<Segment>()
+
     private fun startTracking() {
         trackingJob?.cancel()
+        disarmedSegments.clear()
         trackingJob = scope.launch(Dispatchers.Main) {
             while (isActive) {
                 try {
                     val state = ytController?.playbackState
                     if (state?.state == PlaybackState.STATE_PLAYING) {
                         val pos = state.position
-                        val hit = skipSegments.find { pos in it.startMs..it.endMs }
+
+                        // Seeking back before a segment arms it again.
+                        val toRearm = disarmedSegments.filter { pos < it.startMs - 1000 }
+                        if (toRearm.isNotEmpty()) {
+                            disarmedSegments.removeAll(toRearm.toSet())
+                            AppLogger.log("[TRACKER] Re-armed ${toRearm.size} segment(s) after seeking back")
+                        }
+
+                        val hit = skipSegments.find { pos in it.startMs..it.endMs && it !in disarmedSegments }
 
                         if (hit != null) {
                             AppLogger.log("[TRACKER] ⚠️ CROSSED BOUNDARY: ${hit.category.uppercase()} at $pos ms")
@@ -303,7 +320,7 @@ class MediaNotificationService : NotificationListenerService() {
                             }
 
                             showToast(if (hit.category == "multiple") "Skipped Multiple segments" else "Skipped: ${hit.category.uppercase()}")
-                            skipSegments.remove(hit)
+                            disarmedSegments.add(hit)
                             delay(2000)
                         }
                     }
