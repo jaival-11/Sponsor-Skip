@@ -84,11 +84,17 @@ class MediaNotificationService : NotificationListenerService() {
 
                         if (!isActive) return@launch
 
+                        // The channel is already in the media session metadata.
+                        val channel = freshMetadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                            ?: freshMetadata?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
+                            ?: metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+                            ?: ""
+
                         if (isSpotApp) {
                             AppLogger.log("$modePrefix Direct Metadata ID Extracted: '$targetIdentifier' (Bypassing HTML Search)")
-                            fetchSegmentsAndTrack(targetIdentifier, true)
+                            fetchSegmentsAndTrack(targetIdentifier, "", 0L, true)
                         } else {
-                            fetchSegmentsAndTrack(title, false)
+                            fetchSegmentsAndTrack(title, channel, actualDuration, false)
                         }
                     } catch (e: Exception) {
                         if (e !is CancellationException) {
@@ -159,44 +165,61 @@ class MediaNotificationService : NotificationListenerService() {
         }
     }
 
-    private suspend fun fetchSegmentsAndTrack(targetInput: String, isSpotMode: Boolean) {
+    private suspend fun fetchSegmentsAndTrack(
+        targetInput: String,
+        sessionChannel: String,
+        sessionDurationMs: Long,
+        isSpotMode: Boolean
+    ) {
         try {
-            val targetVideoId: String
-
-            if (isSpotMode) {
-                targetVideoId = targetInput
-            } else {
-                val useStrict = SettingsManager.isStrictSearchEnabled
-                val scrapeMethod = if (useStrict) "strict intitle search" else "standard search"
-                val rawQuery = if (useStrict) "intitle:\"$targetInput\"" else targetInput
-
-                val query = URLEncoder.encode(rawQuery, "UTF-8")
-                val searchReq = Request.Builder().url("https://www.youtube.com/results?search_query=$query").header("User-Agent", "Mozilla/5.0").build()
-                val html = client.newCall(searchReq).execute().body?.string() ?: ""
-                val match = Regex("""/watch\?v=([a-zA-Z0-9_-]{11})""").find(html)
-
-                if (match == null) {
-                    AppLogger.log("[SCRAPER] FATAL: Failed to locate Video ID using method: $scrapeMethod.")
-                    if (SettingsManager.isLoggingEnabled) showToast("Error: Could not extract Video ID")
-                    return
-                }
-                
-                targetVideoId = match.groupValues[1]
-                AppLogger.log("[SCRAPER] Extracted ID: '$targetVideoId' | Method: [$scrapeMethod]")
-            }
-
-            val serviceParam = if (isSpotMode) "&service=spotify" else ""
             val categoriesArr = """["sponsor","intro","outro","interaction","selfpromo","music_offtopic","preview","filler","hook"]"""
             val encCategories = URLEncoder.encode(categoriesArr, "UTF-8")
-            val apiUrl = "https://sponsor.ajay.app/api/skipSegments?videoID=$targetVideoId$serviceParam&categories=$encCategories"
+            val targetVideoId: String
+            val sponsorJson: JSONArray
 
-            AppLogger.log("[API] Executing GET: $apiUrl")
-            val sponsorRes = client.newCall(Request.Builder().url(apiUrl).build()).execute()
-            AppLogger.log("[API] Response Code: ${sponsorRes.code}")
-
-            if (!sponsorRes.isSuccessful) { if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the audio/video"); return }
-
-            val sponsorJson = JSONArray(sponsorRes.body?.string() ?: "[]")
+            if (isSpotMode) {
+                // Spotify puts the id straight into the metadata, so there is
+                // nothing to confirm here.
+                targetVideoId = targetInput
+                val apiUrl = "https://sponsor.ajay.app/api/skipSegments?videoID=" +
+                    URLEncoder.encode(targetVideoId, "UTF-8") +
+                    "&service=spotify&categories=$encCategories"
+                AppLogger.log("[API] Executing GET: $apiUrl")
+                val response = client.newCall(Request.Builder().url(apiUrl).build()).execute()
+                AppLogger.log("[API] Response Code: ${response.code}")
+                if (!response.isSuccessful) {
+                    response.close()
+                    if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the audio/video")
+                    return
+                }
+                sponsorJson = JSONArray(response.body?.string() ?: "[]")
+                response.close()
+            } else {
+                when (val match = VideoMatcher.match(client, targetInput, sessionChannel, sessionDurationMs, encCategories)) {
+                    is VideoMatcher.Result.Confirmed -> {
+                        AppLogger.log("[MATCHER] confirmed ${match.videoId} on ${match.evidence}")
+                        targetVideoId = match.videoId
+                        sponsorJson = match.segments
+                    }
+                    is VideoMatcher.Result.NoSegments -> {
+                        AppLogger.log("[MATCHER] no segments (${match.checked} candidates checked)")
+                        if (SettingsManager.isLoggingEnabled) showToast("No segments are there for the audio/video")
+                        return
+                    }
+                    is VideoMatcher.Result.Unconfirmed -> {
+                        // Not guessing. Silence here would be indistinguishable
+                        // from "this video has no segments".
+                        AppLogger.log("[MATCHER] unconfirmed: ${match.reason}")
+                        showToast("Could not confirm which video this is, not skipping")
+                        return
+                    }
+                    is VideoMatcher.Result.LookupFailed -> {
+                        AppLogger.log("[MATCHER] lookup failed: ${match.reason}")
+                        if (SettingsManager.isLoggingEnabled) showToast("Could not reach YouTube search")
+                        return
+                    }
+                }
+            }
             skipSegments.clear()
             val armedSegments = mutableListOf<Segment>()
 
